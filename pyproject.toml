@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "inventory-control"
+version = "0.1.0"
+description = ""
+authors = ["BitCoders"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["all"], version = "^0.112.0"}
+sqlalchemy = "^2.0.32"
+alembic = "^1.13.2"
+loguru = "^0.7.2"
+httpx = "^0.27.0"
+
+
+[tool.poetry.group.dev.dependencies]
+wemake-python-styleguide = "^0.19.2"
+isort = "^5.13.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
