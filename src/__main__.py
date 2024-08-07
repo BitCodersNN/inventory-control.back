@@ -4,7 +4,7 @@ from loguru import logger
 def main():
     """Main method. Entry point."""
     try:
-        ...
+        ...  # noqa: WPS428
     except Exception as ex:
         logger.critical('You have done something wrong! {0}'.format(str(ex)))
 
