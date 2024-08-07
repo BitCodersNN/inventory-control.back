@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from config import ASYNC_POSTGRES_URL
+from src.config import ASYNC_POSTGRES_URL
 
 ENGINE: Final = create_async_engine(ASYNC_POSTGRES_URL, poolclass=NullPool)
 async_session_maker = sessionmaker(

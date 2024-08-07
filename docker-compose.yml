@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16.1
+    container_name: inventory-control-postgres
+    environment:
+      POSTGRES_DB: inventory_control
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: inventory-control
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+#    restart: unless-stopped
+
+  redis:
+    image: redis:7.4
+    container_name: inventory-control-redis
+    ports:
+      - "6379:6379"
+#    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.1.0
+    container_name: inventory-control-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./config/loki-config.yaml:/etc/loki/loki-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml
+#    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.1.0
+    container_name: inventory-control-promtail
+    volumes:
+      - /var/log:/var/log
+      - ./config/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    command: -config.file=/etc/promtail/promtail-config.yaml
+#    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: inventory-control-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - ~/grafana/data:/var/lib/grafana
+
+  python:
+    build: .
+    container_name: inventory-control-app
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: inventory_control
+      POSTGRES_DB: inventory_control
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+#    command: ["poetry", "run", "alembic", "revision", "--autogenerate", "-m", "test"]
+#    restart: unless-stopped
+
+volumes:
+  postgres-data:
+    driver: local
