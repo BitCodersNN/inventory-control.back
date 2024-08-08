@@ -6,7 +6,9 @@ def main():
     try:
         ...  # noqa: WPS428
     except Exception as ex:
-        logger.opt(exception=True).critical('You have done something wrong! {0}'.format(str(ex)))
+        logger.opt(exception=True).critical(
+            'You have done something wrong! {0}'.format(str(ex)),
+        )
 
 
 if __name__ == '__main__':

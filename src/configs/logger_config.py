@@ -43,7 +43,7 @@ logger.configure(
             'format': LOGGER_FORMAT,
             'filter': INFO_FILTER,
             'level': 'DEBUG',
-            'diagnose': False
+            'diagnose': False,
         },
         {
             'sink': SINK,
@@ -51,7 +51,7 @@ logger.configure(
             'filter': ERROR_FILTER,
             'level': 'ERROR',
             'backtrace': False,
-            'diagnose': False
+            'diagnose': False,
         },
     ],
 )
