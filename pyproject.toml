@@ -24,7 +24,7 @@ wemake-python-styleguide = "^0.19.2"
 isort = "^5.13.2"
 
 [tool.poetry.scripts]
-start = "src.__main__:main"
+app = "src.__main__:main"
 
 [build-system]
 requires = ["poetry-core"]
