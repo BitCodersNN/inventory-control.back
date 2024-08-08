@@ -6,18 +6,16 @@ from src.database_session import BASE
 
 
 class UsersRoles(enum.Enum):
-    """
-    Роли Пользователей
-    """
+    """Роли Пользователей"""
+
     reader = 'reader'
     writer = 'writer'
     admin = 'admin'
 
 
 class UsersTable(BASE):
-    """
-    Таблица пользователей
-    """
+    """Таблица пользователей"""
+
     __tablename__ = 'users'
 
     user_id: so.Mapped[int] = so.mapped_column(primary_key=True, autoincrement=True)

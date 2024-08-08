@@ -1,11 +1,11 @@
 from loguru import logger
+import uvicorn
 
 
 def main():
     """Main method. Entry point."""
-    from api import app
     try:
-        ...  # noqa: WPS428
+        uvicorn.run('api:app', port=8000, reload=True)
     except Exception as ex:
         logger.critical('You have done something wrong! {0}'.format(str(ex)))
 

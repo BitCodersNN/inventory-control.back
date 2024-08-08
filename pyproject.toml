@@ -20,6 +20,9 @@ redis = "^5.0.8"
 wemake-python-styleguide = "^0.19.2"
 isort = "^5.13.2"
 
+[tool.poetry.scripts]
+app = "src.__main__:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

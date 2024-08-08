@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.auth import auth
+from auth import auth
 
 app = FastAPI(
     title="inventory-control"
