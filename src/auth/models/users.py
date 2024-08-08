@@ -6,6 +6,10 @@ from sqlalchemy import orm as so
 
 from src.database_session import BASE
 
+login_size: Final = 20
+pass_hash_size: Final = 32
+name_size: Final = 32
+
 
 class UsersRoles(enum.Enum):
     """Роли Пользователей."""
@@ -13,11 +17,6 @@ class UsersRoles(enum.Enum):
     reader = 'reader'
     writer = 'writer'
     admin = 'admin'
-
-
-login_size: Final = 20
-pass_hash_size: Final = 32
-name_size: Final = 32
 
 
 class UsersTable(BASE):
