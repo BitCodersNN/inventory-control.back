@@ -3,6 +3,7 @@ from loguru import logger
 
 def main():
     """Main method. Entry point."""
+    from api import app
     try:
         ...  # noqa: WPS428
     except Exception as ex:
