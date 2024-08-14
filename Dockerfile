@@ -1,14 +1,13 @@
 FROM python:3.12 as base
 
+WORKDIR /app
+
+COPY pyproject.toml ./
+
 RUN pip install poetry
 
-COPY poetry.lock pyproject.toml /app/
-
-WORKDIR /app
-RUN poetry install --no-root
-
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-root --no-dev
 
 COPY . /app/
 

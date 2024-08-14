@@ -6,9 +6,9 @@ from sqlalchemy import orm as so
 
 from src.database_session import BASE
 
-login_size: Final = 20
-pass_hash_size: Final = 32
-name_size: Final = 32
+MAX_LOGIN_SIZE: Final = 32
+PASS_HASH_SIZE: Final = 32
+MAX_NAME_SIZE: Final = 128
 
 
 class UsersRoles(enum.Enum):
@@ -29,10 +29,10 @@ class UsersTable(BASE):
         autoincrement=True,
     )
     login: so.Mapped[str] = so.mapped_column(
-        sa.String(login_size),
+        sa.String(MAX_LOGIN_SIZE),
         unique=True,
     )
-    pass_hash: so.Mapped[str] = so.mapped_column(sa.String(pass_hash_size))
+    pass_hash: so.Mapped[str] = so.mapped_column(sa.String(PASS_HASH_SIZE))
     salt: so.Mapped[str] = so.mapped_column(sa.String())
     role: so.Mapped[UsersRoles] = so.mapped_column(default=UsersRoles.reader)
-    name: so.Mapped[str] = so.mapped_column(sa.String(name_size))
+    name: so.Mapped[str] = so.mapped_column(sa.String(MAX_NAME_SIZE))
