@@ -1,8 +1,7 @@
-from src.configs.logger.logger_config import logger
 import uvicorn
-from loguru import logger
 
-from src.config import SERVER_PORT
+from src.configs.logger.logger_config import logger
+from src.configs.server_config import SERVER_PORT
 
 
 def main():

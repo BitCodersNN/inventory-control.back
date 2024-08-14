@@ -56,6 +56,7 @@ services:
     environment:
       MODE: Release
       LOKI_URL: http://loki:3100/loki/api/v1/push
+      SERVER_PORT: 8000
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: inventory_control
       POSTGRES_DB: inventory_control
