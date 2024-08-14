@@ -55,6 +55,7 @@ services:
       - redis
     environment:
       MODE: Release
+      LOKI_URL: http://loki:3100/loki/api/v1/push
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: inventory_control
       POSTGRES_DB: inventory_control
