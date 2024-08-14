@@ -1,10 +1,13 @@
+import contextlib
 from typing import AsyncGenerator, Final
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
+from src.configs.logger.logger_config import logger
 from src.configs.db_config import ASYNC_POSTGRES_URL
 
 BASE: Final = declarative_base()
@@ -18,6 +21,7 @@ ASYNC_SESSION_MAKER: Final = sessionmaker(
 )
 
 
+@contextlib.asynccontextmanager
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     """
     Asynchronously yield an SQLAlchemy AsyncSession.
@@ -25,5 +29,16 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     Yields:
         AsyncSession: An asynchronous SQLAlchemy session.
     """
-    async with ASYNC_SESSION_MAKER() as session:
-        yield session
+    try:
+        async with ASYNC_SESSION_MAKER() as session:
+            yield session
+    except SQLAlchemyError as ex:
+        logger.exception(
+            'Не удалось создать сессию с БД! \nSQLAlchemy error: {0}'.format(str(ex)),
+        )
+        if session is not None:
+            await session.rollback()
+        raise ex
+    finally:
+        if session is not None:
+            await session.close()
