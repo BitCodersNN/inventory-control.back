@@ -24,4 +24,4 @@ ASYNC_POSTGRES_URL: Final = (
 REDIS_HOST: Final = os.environ.get('REDIS_HOST')
 REDIS_PORT: Final = os.environ.get('REDIS_PORT')
 
-SERVER_PORT: Final = 8000
+SERVER_PORT: Final = int(os.environ.get('SERVER_PORT'))

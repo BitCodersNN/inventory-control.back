@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 
 
-class Login(BaseModel):
-    """Передается при входе."""
+class AuthorizationData(BaseModel):
+    """Авторизационные данные."""
 
     login: str
     password: str
