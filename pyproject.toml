@@ -21,6 +21,7 @@ requests = "^2.32.3"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
+poetry-dotenv-plugin = "^0.2.0"
 isort = "^5.13.2"
 
 [tool.poetry.scripts]
