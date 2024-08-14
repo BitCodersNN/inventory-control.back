@@ -17,7 +17,6 @@ def _get_handlers(mode):
 
 _MODE: Final = os.getenv('MODE', 'Debug')
 
-
 logger.configure(
     handlers=_get_handlers(_MODE),
 )

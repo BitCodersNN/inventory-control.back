@@ -30,7 +30,11 @@ class _CustomLokiLoggerHandler(LokiLoggerHandler):
         }
         additional_labels = record.get(_EXTRA_KEY).pop(_LABELS_KEY, {})
 
-        all_labels = {**self.labels, **additional_labels, **labels_from_record}
+        all_labels = {
+            **self.labels,
+            **additional_labels,
+            **labels_from_record,
+        }
 
         custom_handler = LokiLoggerHandler(
             url=self.request.url,
@@ -44,7 +48,6 @@ class _CustomLokiLoggerHandler(LokiLoggerHandler):
 
 
 class _CustomLoguruFormatter:
-
     def format(self, record):
         formatted = {
             _MESSAGE_KEY: record.get(_MESSAGE_KEY),
