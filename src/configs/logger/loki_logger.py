@@ -23,6 +23,14 @@ _STACKTRACE_ENABLED_LEVELS: Final = ('ERROR', 'CRITICAL')
 
 
 class _CustomLokiLoggerHandler(LokiLoggerHandler):
+    """
+    Кастомный обработчик логов для Loki, расширяющий базовый LokiLoggerHandler.
+
+    Переопределяет метод `emit` для настройки меток в сообщениях логов.
+    Объединяет предопределенные метки с метками из записи лога
+    и дополнительными метками.
+    """
+
     def emit(self, record):
         labels_from_record = {
             _FUNCTION_KEY: record.get(_FUNCTION_KEY),
@@ -48,6 +56,15 @@ class _CustomLokiLoggerHandler(LokiLoggerHandler):
 
 
 class _CustomLoguruFormatter:
+    """
+    Кастомный форматтер для логов Loguru.
+
+    Предоставляет метод форматирования записей логов, включая сообщение,
+    временную метку и уровень логирования.
+    Опционально включает дополнительную информацию, такую как имя файла,
+    путь, номер строки и трассировку стека для определенных уровней логирования.
+    """
+
     def format(self, record):
         formatted = {
             _MESSAGE_KEY: record.get(_MESSAGE_KEY),

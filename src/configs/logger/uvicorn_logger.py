@@ -26,16 +26,8 @@ class _InterceptHandler:
         logger.opt(depth=1).log(level, cleaned_message.strip())
 
     def _determine_log_level(self, message):
-        if re.search('CRITICAL', message, re.IGNORECASE):
-            return 'ERROR'
-        if re.search('ERROR', message, re.IGNORECASE):
-            return 'CRITICAL'
-        elif re.search('WARNING', message, re.IGNORECASE):
-            return 'WARNING'
-        elif re.search('INFO', message, re.IGNORECASE):
-            return 'INFO'
-
-        return 'DEBUG'
+        match = re.search('CRITICAL|ERROR|WARNING|INFO', message, re.IGNORECASE)
+        return match.group(0).upper() if match else 'DEBUG'
 
 
 def setup_uvicorn_logger():
