@@ -9,8 +9,6 @@ RUN pip install poetry
 RUN poetry config virtualenvs.create false && \
     poetry install --no-root --no-dev
 
-COPY . /app/
+COPY . .
 
-WORKDIR /app
-
-CMD ["poetry", "run", "python", "src/__main__.py"]
+CMD ["poetry", "run", "app"]

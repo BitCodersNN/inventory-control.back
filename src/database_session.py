@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from src.config import ASYNC_POSTGRES_URL
+from src.configs.db_config import ASYNC_POSTGRES_URL
 
 BASE: Final = declarative_base()
 
