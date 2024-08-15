@@ -1,11 +1,6 @@
 import sys
 from typing import Final
 
-
-def _create_filter(condition):
-    return lambda record: condition(record['level'].no)
-
-
 _LOGGER_FORMAT: Final = (
     '{time:YYYY-MM-DD HH:mm:ss.SSS}' +
     ' | <level>{level: <8}</level> |' +
