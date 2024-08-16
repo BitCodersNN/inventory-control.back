@@ -34,6 +34,8 @@ services:
     volumes:
       - /var/log:/var/log
       - ./config/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+    depends_on:
+      - loki
     command: -config.file=/etc/promtail/promtail-config.yaml
     restart: unless-stopped
 
@@ -53,6 +55,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - promtail
     environment:
       MODE: Release
       LOKI_URL: http://loki:3100/loki/api/v1/push
