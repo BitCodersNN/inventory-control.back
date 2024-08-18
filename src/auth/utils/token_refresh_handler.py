@@ -27,4 +27,6 @@ def limit_refresh_tokens(mapper, connection, target):
         RefreshTokenModel.user_id == target.user_id,
     ).count()
     if token_count >= MAX_TOKEN_COUNT:
-        raise ValueError('User cannot have more than MAX_TOKEN_COUNT refresh tokens')
+        raise ValueError(
+            'User cannot have more than MAX_TOKEN_COUNT refresh tokens',
+        )
