@@ -5,11 +5,6 @@ import uvicorn
 from src.configs.logger.logger_config import logger
 
 
-def _determine_log_level(message):
-    match = re.search('CRITICAL|ERROR|WARNING|INFO', message, re.IGNORECASE)
-    return match.group(0).upper() if match else 'DEBUG'
-
-
 class _InterceptHandler:
     """
     Обработчик для перехвата и логирования сообщений с определенным уровнем.
@@ -26,13 +21,13 @@ class _InterceptHandler:
         Args:
             message (str): Сообщение для логирования.
         """
-        level = _determine_log_level(message)
+        level = self._determine_log_level(message)
         cleaned_message = re.sub(r'^\w+:\s*', '', message)
-        logger.opt(depth=6).log(
-            level,
-            cleaned_message.strip(),
-            labels={'logger_name': 'uvicorn'},
-        )
+        logger.opt(depth=1).log(level, cleaned_message.strip())
+
+    def _determine_log_level(self, message):
+        match = re.search('CRITICAL|ERROR|WARNING|INFO', message, re.IGNORECASE)
+        return match.group(0).upper() if match else 'DEBUG'
 
 
 def setup_uvicorn_logger():

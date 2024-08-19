@@ -11,6 +11,4 @@ RUN poetry config virtualenvs.create false && \
 
 COPY . .
 
-ENTRYPOINT ["/bin/sh", "-c"]
-
-CMD ["alembic upgrade head && poetry run app"]
+CMD ["poetry", "run", "app"]
