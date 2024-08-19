@@ -1,10 +1,14 @@
 import contextlib
 from typing import AsyncGenerator, Final
 
+from sqlalchemy import NullPool
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from src.configs.db_config import ASYNC_POSTGRES_URL
 from src.configs.logger.logger_config import logger
