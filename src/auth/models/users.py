@@ -11,7 +11,7 @@ PASS_HASH_SIZE: Final = 32
 MAX_NAME_SIZE: Final = 128
 
 
-class UsersRoles(enum.Enum):
+class UserRoles(enum.Enum):
     """Роли Пользователей."""
 
     reader = 'reader'
@@ -34,5 +34,8 @@ class UsersTable(BASE):
     )
     pass_hash: so.Mapped[str] = so.mapped_column(sa.String(PASS_HASH_SIZE))
     salt: so.Mapped[str] = so.mapped_column(sa.String())
-    role: so.Mapped[UsersRoles] = so.mapped_column(default=UsersRoles.reader)
+    role: so.Mapped[UserRoles] = so.mapped_column(
+        sa.Enum(UserRoles, name='user_roles'),
+        default=UserRoles.reader,
+    )
     name: so.Mapped[str] = so.mapped_column(sa.String(MAX_NAME_SIZE))
