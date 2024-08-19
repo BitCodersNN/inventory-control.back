@@ -4,8 +4,7 @@ from typing import AsyncGenerator, Final
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 
 from src.configs.db_config import ASYNC_POSTGRES_URL
 from src.configs.logger.logger_config import logger
@@ -14,8 +13,8 @@ BASE: Final = declarative_base()
 
 ENGINE: Final = create_async_engine(ASYNC_POSTGRES_URL, poolclass=NullPool)
 
-ASYNC_SESSION_MAKER: Final = sessionmaker(
-    engine=ENGINE,
+ASYNC_SESSION_MAKER: Final = async_sessionmaker(
+    ENGINE,
     class_=AsyncSession,
     expire_on_commit=False,
 )
