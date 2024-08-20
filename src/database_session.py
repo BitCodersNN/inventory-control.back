@@ -36,7 +36,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
             yield session
     except Exception as ex:
         logger.exception(
-            'Не удалось создать сессию с БД! \nError: {0}'.format(
+            'Произошла ошибка при работе с БД\nError: {0}'.format(
                 str(ex),
             ),
         )

@@ -2,10 +2,12 @@ import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import event, func
 from sqlalchemy import orm as so
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 
+from src.auth.utils.constants import MAX_TOKEN_COUNT
 from src.database_session import BASE
 
 
@@ -53,3 +55,29 @@ class RefreshTokenModel(BASE):
         UUID,
         sa.ForeignKey('users.user_id', ondelete='CASCADE'),
     )
+
+
+@event.listens_for(RefreshTokenModel, 'before_insert')
+def check_token_limit(mapper, connection, target):
+    """
+    Проверка лимита токенов перед вставкой.
+
+    Args:
+        mapper: Маппер модели.
+        connection: Соединение с БД.
+        target: Экземпляр модели.
+
+    Raises:
+        ValueError: Если превышен лимит токенов.
+    """
+    query = select(
+        func.count(),
+    ).where(
+        RefreshTokenModel.user_id == target.user_id,
+    )
+    result_of_query = connection.execute(query)
+    count = result_of_query.scalar()
+    if count >= MAX_TOKEN_COUNT:
+        raise ValueError(
+            f'Превышен лимит токенов у пользователя {target.user_id}.',
+        )
