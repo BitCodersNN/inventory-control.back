@@ -6,6 +6,7 @@ from sqlalchemy import event, func
 from sqlalchemy import orm as so
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql.expression import false
 
 from src.auth.utils.constants import MAX_TOKEN_COUNT
 from src.database_session import BASE
@@ -72,12 +73,13 @@ def check_token_limit(mapper, connection, target):
     """
     query = select(
         func.count(),
-    ).where(
+    ).filter(
         RefreshTokenModel.user_id == target.user_id,
+        RefreshTokenModel.revoked == false(),
     )
     result_of_query = connection.execute(query)
     count = result_of_query.scalar()
     if count >= MAX_TOKEN_COUNT:
         raise ValueError(
-            f'Превышен лимит токенов у пользователя {target.user_id}.',
+            f'Превышен лимит токенов у пользователя c id: {target.user_id}.',
         )
