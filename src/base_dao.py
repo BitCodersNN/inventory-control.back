@@ -1,7 +1,7 @@
 from typing import Generic, Optional, Sequence, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import CursorResult, Result, select
+from sqlalchemy import CursorResult, Result, func, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
@@ -68,8 +68,7 @@ class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
         try:
             query_result = await cls._execute_query(session, query)
         except Exception as ex:
-            cls._log_error('find_one_or_none', filters, filters_by, ex)
-            return None
+            return cls._log_error('find_one_or_none', filters, filters_by, ex)
         return query_result.scalars().one_or_none()
 
     @classmethod
@@ -110,9 +109,41 @@ class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
         try:
             query_result = await cls._execute_query(session, query)
         except Exception as ex:
-            cls._log_error('find_all', filters, filters_by, ex)
-            return None
+            return cls._log_error('find_all', filters, filters_by, ex)
         return query_result.scalars().all()
+
+    @classmethod
+    async def count(
+        cls,
+        session: AsyncSession,
+        *filters,
+        **filters_by,
+    ) -> Optional[int]:
+        """
+        Подсчитывает количество записей, соответствующих заданным фильтрам.
+
+        Аргументы:
+            session (AsyncSession): Асинхронная сессия базы данных.
+            filters: Позиционные фильтры.
+            filters_by: Фильтры по ключевым словам.
+
+        Возвращает:
+            Optional[int]: Количество записей или None в случае ошибки.
+        """
+        query: Select = select(
+            func.count(),
+        ).select_from(
+            cls.model,
+        ).filter(
+            *filters,
+        ).filter_by(
+            **filters_by,
+        )
+        try:
+            query_result = await cls._execute_query(session, query)
+        except Exception as ex:
+            return cls._log_error('count', filters, filters_by, ex)
+        return query_result.scalar()
 
     @classmethod
     async def _execute_query(
