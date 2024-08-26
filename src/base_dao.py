@@ -1,26 +1,23 @@
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Any, Dict, Generic, Optional, Sequence, TypeVar, Union
 
 from pydantic import BaseModel
-from sqlalchemy import CursorResult, Result, func, select
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import Select
+from sqlalchemy.sql import Delete, Insert, Select, Update
 
 from src.configs.logger.logger_config import logger
 from src.database_session import BASE
+from src.db_query_executor import execute_query
 
 ModelType = TypeVar('ModelType', bound=BASE)
 CreateSchemeType = TypeVar('CreateSchemeType', bound=BaseModel)
 UpdateSchemeType = TypeVar('UpdateSchemeType', bound=BaseModel)
 
-_LOGGER_MESSAGE = (
-    'Ошибка выполнения запроса в {class}.{method} ' +
-    'с фильтрами: {filters}, filters_by: {filters_by}. ' +
-    'Ошибка: {ex}'
-)
 
-
-class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
+class BaseDAO(   # noqa: WPS214
+    Generic[ModelType, CreateSchemeType, UpdateSchemeType],
+):
     """
     Базовый класс для работы с данными (DAO).
 
@@ -57,18 +54,21 @@ class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
             Optional[ModelType]: Найденную запись или None,
             если запись не найдена.
         """
-        query: Select = select(
-            cls.model,
-        ).filter(
-            *filters,
-        ).filter_by(
-            **filters_by,
+        query: Select = (
+            select(cls.model).
+            filter(*filters).
+            filter_by(**filters_by)
         )
 
         try:
-            query_result = await cls._execute_query(session, query)
+            query_result = await execute_query(session, query)
         except Exception as ex:
-            return cls._log_error('find_one_or_none', filters, filters_by, ex)
+            return cls._log_error(
+                'find_one_or_none',
+                ex,
+                filters=filters,
+                filters_by=filters_by,
+            )
         return query_result.scalars().one_or_none()
 
     @classmethod
@@ -94,22 +94,23 @@ class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
             Optional[Sequence[ModelType]]: Список найденных записей или None,
             если произошла ошибка.
         """
-        query: Select = select(
-            cls.model,
-        ).filter(
-            *filters,
-        ).filter_by(
-            **filters_by,
-        ).offset(
-            offset,
-        ).limit(
-            limit,
+        query: Select = (
+            select(cls.model).
+            filter(*filters).
+            filter_by(**filters_by).
+            offset(offset).
+            limit(limit)
         )
 
         try:
-            query_result = await cls._execute_query(session, query)
+            query_result = await execute_query(session, query)
         except Exception as ex:
-            return cls._log_error('find_all', filters, filters_by, ex)
+            return cls._log_error(
+                'find_all',
+                ex,
+                filters=filters,
+                filters_by=filters_by,
+            )
         return query_result.scalars().all()
 
     @classmethod
@@ -124,76 +125,171 @@ class BaseDAO(Generic[ModelType, CreateSchemeType, UpdateSchemeType]):
 
         Аргументы:
             session (AsyncSession): Асинхронная сессия базы данных.
-            filters: Позиционные фильтры.
-            filters_by: Фильтры по ключевым словам.
+            filters: Фильтры для метода filter.
+            filters_by: Фильтры для метода filter_by.
 
         Возвращает:
             Optional[int]: Количество записей или None в случае ошибки.
         """
-        query: Select = select(
-            func.count(),
-        ).select_from(
-            cls.model,
-        ).filter(
-            *filters,
-        ).filter_by(
-            **filters_by,
+        query: Select = (
+            select(func.count()).
+            select_from(cls.model).
+            filter(*filters).
+            filter_by(**filters_by)
         )
         try:
-            query_result = await cls._execute_query(session, query)
+            query_result = await execute_query(session, query)
         except Exception as ex:
-            return cls._log_error('count', filters, filters_by, ex)
+            return cls._log_error(
+                'count',
+                ex,
+                filters=filters,
+                filters_by=filters_by,
+            )
         return query_result.scalar()
 
     @classmethod
-    async def _execute_query(
+    async def add(
         cls,
         session: AsyncSession,
-        query: Select,
-    ) -> Optional[Result | CursorResult]:
+        obj_in: Union[CreateSchemeType, Dict[str, Any]],
+    ) -> Optional[ModelType]:
         """
-        Выполняет запрос к базе данных.
+        Асинхронный метод класса для добавления новой записи в базу данных.
 
         Аргументы:
-            session: Асинхронная сессия SQLAlchemy.
-            query: SQLAlchemy запрос.
+            session (AsyncSession): Асинхронная сессия базы данных.
+            obj_in (Union[CreateSchemeType, Dict[str, Any]]): Данные для
+            создания новой записи, которые могут быть либо экземпляром
+            CreateSchemeType, либо словарем.
 
         Возвращает:
-            Optional[Result | CursorResult]: Результат выполнения запроса.
+            Optional[ModelType]: Созданная запись в базе данных
+            или None в случае ошибки.
         """
-        async with session.begin():
-            query_result = await session.execute(query)
-        return query_result
+        create_data = (
+            obj_in if isinstance(obj_in, dict)
+            else obj_in.model_dump(exclude_unset=True)
+        )
+        query: Insert = (
+            insert(cls.model).
+            values(**create_data).
+            returning(cls.model)
+        )
+        try:
+            query_result = await execute_query(session, query)
+        except Exception as ex:
+            return cls._log_error('add', ex, data=create_data)
+        return query_result.scalars().first()
+
+    @classmethod
+    async def delete(
+        cls,
+        session: AsyncSession,
+        *filters,
+        **filters_by,
+    ) -> Optional[int]:
+        """
+        Удаляет записи из базы данных, соответствующие заданным фильтрам.
+
+        Аргументы:
+            session (AsyncSession): Асинхронная сессия базы данных.
+            filters: Фильтры для метода filter.
+            filters_by: Фильтры для метода filter_by.
+
+        Возвращает:
+            Optional[int]: Количество удаленных строк или None в случае ошибки.
+        """
+        query: Delete = (
+            delete(cls.model).
+            filter(*filters).
+            filter_by(**filters_by)
+        )
+        try:
+            query_result = await execute_query(session, query)
+        except Exception as ex:
+            return cls._log_error(
+                'delete',
+                ex,
+                filters=filters,
+                filters_by=filters_by,
+            )
+        return query_result.rowcount()
+
+    @classmethod
+    async def update(
+        cls,
+        session: AsyncSession,
+        *where,
+        obj_in: Union[UpdateSchemeType, Dict[str, Any]],
+    ) -> Optional[ModelType]:
+        """
+        Обновляет запись в базе данных на основе переданных параметров.
+
+        Аргументы:
+            session (AsyncSession): Асинхронная сессия базы данных.
+            where: Условия для выборки записи, которую нужно обновить.
+            obj_in (Union[UpdateSchemeType, Dict[str, Any]]): Данные
+            для обновления, могут быть представлены как экземпляром
+            схемы обновления, так и словарем.
+
+        Возвращает:
+            Обновленный экземпляр модели или None в случае ошибки.
+        """
+        update_data = (
+            obj_in if isinstance(obj_in, dict)
+            else obj_in.model_dump(exclude_unset=True)
+        )
+        query: Update = (
+            update(cls.model).
+            where(*where).
+            values(**update_data).
+            returning(cls.model)
+        )
+        try:
+            query_result = await execute_query(session, query)
+        except Exception as ex:
+            return cls._log_error(
+                'update',
+                ex,
+                where=where,
+                data=update_data,
+            )
+        return query_result.scalars().one()
 
     @classmethod
     def _log_error(
         cls,
         method_name: str,
-        filters,
-        filters_by,
         ex: Exception,
+        **kwargs,
     ) -> None:
         """
         Логирует ошибку, связанную с выполнением метода класса.
 
         Аргументы:
             method_name: Имя метода, в котором произошла ошибка.
-            filters: Фильтры, использованные в запросе.
-            filters_by: Фильтры полей, использованные в запросе.
             ex: Исключение, которое было вызвано.
+            kwargs: Дополнительные параметры для логирования.
         """
         labels = {'Error name': type(ex).__name__}
         if isinstance(ex, SQLAlchemyError):
             labels['Table name'] = cls.model.__tablename__
 
+        message_parts = [
+            f'Ошибка выполнения запроса в {cls.__name__}.{method_name}',
+        ]
+
+        for key, argument in kwargs.items():
+            if argument is not None:
+                message_parts.append(f'{key.capitalize()}: {argument}')
+
+        message_parts.append(f'Ошибка: {ex}')
+
+        log_message = ' '.join(message_parts)
+
         logger.error(
-            _LOGGER_MESSAGE.format(
-                class_name=cls.__name__,
-                method_name=method_name,
-                filters=filters,
-                filters_by=filters_by,
-                ex=ex,
-            ),
+            log_message,
             exc_info=True,
             labels=labels,
         )
