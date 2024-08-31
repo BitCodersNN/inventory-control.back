@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql.expression import false
 
 from src.auth.utils.constants import MAX_TOKEN_COUNT
-from src.database_session import BASE
+from src.utils.database_session import BASE
 
 
 class RefreshTokenModel(BASE):

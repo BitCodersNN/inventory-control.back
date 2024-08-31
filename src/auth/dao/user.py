@@ -1,5 +1,5 @@
 from src.auth.models import UserModel
-from src.base_dao import BaseDAO
+from src.utils.base_dao import BaseDAO
 
 
 class UserDAO(BaseDAO[UserModel]):

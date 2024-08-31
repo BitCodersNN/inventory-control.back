@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, Optional, Sequence, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Sequence, TypeVar, Union
 
 from pydantic import BaseModel
 from sqlalchemy import delete, func, insert, select, update
@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Delete, Insert, Select, Update
 
 from src.configs.logger.logger_config import logger
-from src.database_session import BASE
-from src.db_query_executor import execute_query
+from src.utils.database_session import BASE
+from src.utils.db_query_executor import execute_query
 
 ModelType = TypeVar('ModelType', bound=BASE)
 CreateSchemeType = TypeVar('CreateSchemeType', bound=BaseModel)
@@ -31,6 +31,16 @@ class BaseDAO(   # noqa: WPS214
         или None, если записи нет по заданным фильтрам или возникла ошибка.
         find_all: Асинхронно находит все записи по заданным фильтрам
         или None, если возникла ошибка.
+        count: Асинхронно подсчитывает количество записей по заданным фильтрам
+        или None, если возникла ошибка.
+        add: Асинхронно добавляет новую запись в базу данных.
+        delete: Асинхронно удаляет записи из базы данных по заданным фильтрам.
+        update: Асинхронно обновляет запись в базе данных.
+        add_bulk: Асинхронно массово добавляет записи в базу данных.
+        update_bulk: Асинхронно массово обновляет записи в базе данных.
+
+    Этот класс служит основой для создания DAO-классов, которые могут быть
+    специализированы для работы с конкретными моделями данных.
     """
 
     model = None
@@ -155,7 +165,7 @@ class BaseDAO(   # noqa: WPS214
         obj_in: Union[CreateSchemeType, Dict[str, Any]],
     ) -> Optional[ModelType]:
         """
-        Асинхронный метод класса для добавления новой записи в базу данных.
+        Добавляет новую запись в базу данных.
 
         Аргументы:
             session (AsyncSession): Асинхронная сессия базы данных.
@@ -256,6 +266,62 @@ class BaseDAO(   # noqa: WPS214
                 data=update_data,
             )
         return query_result.scalars().one()
+
+    @classmethod
+    async def add_bulk(
+        cls,
+        session: AsyncSession,
+        data_in: List[Dict[str, Any]],
+    ) -> Optional[Sequence[ModelType]]:
+        """
+        Массово добавляет записи в базу данных.
+
+        Аргументы:
+            session (AsyncSession): Асинхронная сессия базы данных.
+            data (List[Dict[str, Any]]): Список словарей, содержащих
+            данные для вставки.
+
+        Возвращает:
+            Последовательность объектов модели или None в случае ошибки.
+        """
+        query: Insert = insert(cls.model).returning(cls.model)
+        try:
+            query_result = await execute_query(session, query, data_in)
+        except Exception as ex:
+            return cls._log_error(
+                'add_bulk',
+                ex,
+                data=data_in,
+            )
+        return query_result.scalars().all()
+
+    @classmethod
+    async def update_bulk(
+        cls,
+        session: AsyncSession,
+        data_in: List[Dict[str, Any]],
+    ) -> Optional[Sequence[ModelType]]:
+        """
+        Массово обновляет записи в базе данных.
+
+        Аргументы:
+            session (AsyncSession): Асинхронная сессия базы данных.
+            data_in (List[Dict[str, Any]]): Список словарей, содержащих
+            данные для вставки.
+
+        Возвращает:
+            Последовательность объектов модели или None в случае ошибки.
+        """
+        query: Update = update(cls.model).returning(cls.model)
+        try:
+            query_result = await execute_query(session, query, data_in)
+        except Exception as ex:
+            return cls._log_error(
+                'update_bulk',
+                ex,
+                data=data_in,
+            )
+        return query_result.scalars().all()
 
     @classmethod
     def _log_error(
