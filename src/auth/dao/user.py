@@ -1,8 +1,9 @@
 from src.auth.models import UserModel
+from src.auth.schemas.user import UserCreateDB, UserUpdateDB
 from src.utils.base_dao import BaseDAO
 
 
-class UserDAO(BaseDAO[UserModel]):
+class UserDAO(BaseDAO[UserModel, UserCreateDB, UserUpdateDB]):
     """
     Объект доступа к данным для модели UserModel.
 
