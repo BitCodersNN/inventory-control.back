@@ -6,6 +6,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
+from src.auth.models import *
 from src.configs.db_config import ASYNC_POSTGRES_URL
 from src.configs.logger.alembic_logger import setup_alembic_logger
 from src.utils.database_session import BASE
