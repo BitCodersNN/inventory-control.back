@@ -9,7 +9,7 @@ from alembic import context
 from src.auth.models import *
 from src.configs.db_config import ASYNC_POSTGRES_URL
 from src.configs.logger.alembic_logger import setup_alembic_logger
-from src.database_session import BASE
+from src.utils.database_session import BASE
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

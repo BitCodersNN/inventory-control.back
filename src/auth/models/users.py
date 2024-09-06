@@ -5,7 +5,7 @@ from typing import Final
 import sqlalchemy as sa
 from sqlalchemy import orm as so
 
-from src.database_session import BASE
+from src.utils.database_session import BASE
 
 MAX_LOGIN_SIZE: Final = 32
 PASS_HASH_SIZE: Final = 32
