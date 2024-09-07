@@ -15,4 +15,4 @@ class Token(BaseModel):
 
     access_token: str
     refresh_toke: uuid.UUID
-    token_type: str
+    token_type: str = 'Bearer'
