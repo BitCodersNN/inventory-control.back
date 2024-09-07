@@ -193,4 +193,3 @@ class TokenManager:
             user_id=user.user_id,
         ))
         return refresh_token
-1

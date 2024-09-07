@@ -13,4 +13,3 @@ ACCESS_TOKEN_EXPIRE_SECONDS: Final = (
 REFRESH_TOKEN_EXPIRE_SECONDS: Final = (
     int(os.environ.get('REFRESH_TOKEN_EXPIRE_DAYS')) * 24 * 60
 )
-1
