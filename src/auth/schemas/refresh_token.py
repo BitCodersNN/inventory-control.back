@@ -8,7 +8,7 @@ class RefreshTokenCreate(BaseModel):
     """
     Класс для создания нового объекта RefreshToken.
 
-    Атрибуты:
+    Attributes:
         refresh_token (uuid.UUID): Уникальный идентификатор
         для refresh токена.
         expires_int (int): Время жизни токена в секундах.
@@ -25,7 +25,7 @@ class RefreshTokenUpdate(RefreshTokenCreate):
     """
     Класс для обновления существующего объекта RefreshToken.
 
-    Атрибуты:
+    Attributes:
         refresh_token (uuid.UUID): Уникальный идентификатор для
         refresh токена.
         expires_int (int): Время жизни токена в секундах.

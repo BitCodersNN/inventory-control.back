@@ -16,7 +16,7 @@ class RefreshTokenDAO(
     операций CRUD (создание, чтение, обновление, удаление)
     над объектами модели RefreshTokenModel.
 
-    Атрибуты:
+    Attributes:
         model (RefreshTokenModel): Модель данных, с которой работает DAO.
     """
 

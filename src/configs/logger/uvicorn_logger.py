@@ -15,8 +15,7 @@ class _InterceptHandler:
     Обработчик для перехвата и логирования сообщений с определенным уровнем.
 
     Methods:
-        write(message: str) -> None:
-            Обрабатывает и логирует сообщение.
+        write(message: str) -> None: Обрабатывает и логирует сообщение.
     """
 
     def write(self, message):
