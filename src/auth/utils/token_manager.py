@@ -41,7 +41,7 @@ class TokenManager:
 
         Args:
             session (AsyncSession): Сессия базы данных.
-            user (UserModel): Пользователь.
+            user (UserModel): Модель пользователя.
 
         Returns:
             Token: Объект с током доступа и обновления.
@@ -66,7 +66,7 @@ class TokenManager:
         Args:
             session (AsyncSession): Сессия базы данных.
             old_refresh_token (RefreshTokenModel): Токен обновления.
-            user (UserModel): Пользователь.
+            user (UserModel): Модель пользователя.
 
         Returns:
             Token: Новый токен доступа и обновления.
@@ -78,7 +78,7 @@ class TokenManager:
             raise ValueError('user_id != user_id')
 
         created_at: datetime = old_refresh_token.created_at
-        expires_in: int = int(old_refresh_token.expires_in)
+        expires_in: int = old_refresh_token.expires_in
         date_end: datetime = created_at + timedelta(seconds=expires_in)
         if date_end < datetime.now(timezone.utc):
             raise ValueError('Рефреш токен устарел.')
