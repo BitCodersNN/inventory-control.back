@@ -7,7 +7,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.models import RefreshSessionModel, UserModel
-from src.auth.schemas.refresh_session import RefreshSessionCreate, RefreshSessionUpdate
+from src.auth.schemas.refresh_session import (
+    RefreshSessionCreate,
+    RefreshSessionUpdate,
+)
 from src.auth.schemas.token import Token
 from src.configs.token_config import (
     ACCESS_TOKEN_EXPIRE_SECONDS,
