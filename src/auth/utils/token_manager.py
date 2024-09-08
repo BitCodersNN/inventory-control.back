@@ -71,7 +71,7 @@ class TokenManager:
 
         Args:
             session (AsyncSession): Асинхронная сессия для работы с БД.
-            old_refresh_token (RefreshTokenModel): Старый токен обновления.
+            old_refresh_token (RefreshSessionModel): Старый токен обновления.
             user (UserModel): Модель пользователя, для которого
             обновляются токены.
 

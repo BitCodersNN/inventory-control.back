@@ -14,10 +14,10 @@ class RefreshSessionDAO(
 
     Этот класс наследуется от BaseDAO и предоставляет методы для выполнения
     операций CRUD (создание, чтение, обновление, удаление)
-    над объектами модели RefreshTokenModel.
+    над объектами модели RefreshSessionModel.
 
-    Attributes:
-        model (RefreshTokenModel): Модель данных, с которой работает DAO.
+    Атрибуты:
+        model (RefreshSessionModel): Модель данных, с которой работает DAO.
     """
 
     model = RefreshSessionModel
