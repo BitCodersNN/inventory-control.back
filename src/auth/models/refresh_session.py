@@ -35,7 +35,7 @@ class RefreshSessionModel(BASE):
 
     """
 
-    __tablename__ = 'refresh_tokens'
+    __tablename__ = 'refresh_sessions'
 
     token_id: so.Mapped[int] = so.mapped_column(
         primary_key=True,
