@@ -8,10 +8,10 @@ class _RefreshSessionBase(BaseModel):
     """
     Базовый класс для сессии обновления токена.
 
-    Атрибуты:
+    Attributes:
         refresh_token (Optional[uuid.UUID]): UUID обновляющего токена.
-        expires_in (Optional[int]): время жизни токена.
-        revoked (bool): флаг, указывающий, была ли сессия отозвана.
+        expires_in (Optional[int]): Время жизни токена.
+        revoked (bool): Флаг, указывающий, была ли сессия отозвана.
         По умолчанию - False.
         user_id (Optional[uuid.UUID]): UUID пользователя, связанного с сессией.
     """
@@ -26,11 +26,11 @@ class RefreshSessionCreate(_RefreshSessionBase):
     """
     Класс для создания новой сессии обновления токена.
 
-    Атрибуты:
+    Attributes:
         refresh_token (uuid.UUID): UUID обновляющего токена.
-        expires_in (int): время жизни токена.
+        expires_in (int): Время жизни токена.
         user_id (uuid.UUI): UUID пользователя, связанного с сессией.
-        revoked (bool): флаг, указывающий, была ли сессия отозвана.
+        revoked (bool): Флаг, указывающий, была ли сессия отозвана.
         По умолчанию - False.
     """
 
@@ -43,10 +43,10 @@ class RefreshSessionUpdate(_RefreshSessionBase):
     """
     Класс для обновления существующей сессии обновления токена.
 
-    Атрибуты:
+    Attributes:
         refresh_token (Optional[uuid.UUID]): UUID обновляющего токена.
-        expires_in (Optional[int]): время жизни токена.
-        revoked (bool): флаг, указывающий, была ли сессия отозвана.
+        expires_in (Optional[int]): Время жизни токена.
+        revoked (bool): Флаг, указывающий, была ли сессия отозвана.
         По умолчанию - False.
         user_id (Optional[uuid.UUID]): UUID пользователя, связанного с сессией.
     """
