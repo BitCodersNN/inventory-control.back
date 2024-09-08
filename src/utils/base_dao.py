@@ -60,7 +60,7 @@ class BaseDAO(   # noqa: WPS214
             filters: Фильтры для метода filter.
             filters_by: Фильтры для метода filter_by.
 
-        Возвращает:
+        Returns:
             Optional[ModelType]: Найденную запись или None,
             если запись не найдена.
         """
@@ -93,14 +93,14 @@ class BaseDAO(   # noqa: WPS214
         """
         Находит все записи по заданным фильтрам.
 
-        Аргументы:
+        Args:
             session: Асинхронная сессия SQLAlchemy.
             offset: Смещение для запроса.
             limit: Лимит на количество возвращаемых записей.
             filters: Фильтры для метода filter.
             filters_by: Фильтры для метода filter_by.
 
-        Возвращает:
+        Returns:
             Optional[Sequence[ModelType]]: Список найденных записей или None,
             если произошла ошибка.
         """
@@ -133,12 +133,12 @@ class BaseDAO(   # noqa: WPS214
         """
         Подсчитывает количество записей, соответствующих заданным фильтрам.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             filters: Фильтры для метода filter.
             filters_by: Фильтры для метода filter_by.
 
-        Возвращает:
+        Returns:
             Optional[int]: Количество записей или None в случае ошибки.
         """
         query: Select = (
@@ -167,13 +167,13 @@ class BaseDAO(   # noqa: WPS214
         """
         Добавляет новую запись в базу данных.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             obj_in (Union[CreateSchemeType, Dict[str, Any]]): Данные для
             создания новой записи, которые могут быть либо экземпляром
             CreateSchemeType, либо словарем.
 
-        Возвращает:
+        Returns:
             Optional[ModelType]: Созданная запись в базе данных
             или None в случае ошибки.
         """
@@ -202,12 +202,12 @@ class BaseDAO(   # noqa: WPS214
         """
         Удаляет записи из базы данных, соответствующие заданным фильтрам.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             filters: Фильтры для метода filter.
             filters_by: Фильтры для метода filter_by.
 
-        Возвращает:
+        Returns:
             Optional[int]: Количество удаленных строк или None в случае ошибки.
         """
         query: Delete = (
@@ -236,14 +236,14 @@ class BaseDAO(   # noqa: WPS214
         """
         Обновляет запись в базе данных на основе переданных параметров.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             where: Условия для выборки записи, которую нужно обновить.
             obj_in (Union[UpdateSchemeType, Dict[str, Any]]): Данные
             для обновления, могут быть представлены как экземпляром
             схемы обновления, так и словарем.
 
-        Возвращает:
+        Returns:
             Обновленный экземпляр модели или None в случае ошибки.
         """
         update_data = (
@@ -276,12 +276,12 @@ class BaseDAO(   # noqa: WPS214
         """
         Массово добавляет записи в базу данных.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             data (List[Dict[str, Any]]): Список словарей, содержащих
             данные для вставки.
 
-        Возвращает:
+        Returns:
             Последовательность объектов модели или None в случае ошибки.
         """
         query: Insert = insert(cls.model).returning(cls.model)
@@ -304,12 +304,12 @@ class BaseDAO(   # noqa: WPS214
         """
         Массово обновляет записи в базе данных.
 
-        Аргументы:
+        Args:
             session (AsyncSession): Асинхронная сессия базы данных.
             data_in (List[Dict[str, Any]]): Список словарей, содержащих
             данные для вставки.
 
-        Возвращает:
+        Returns:
             Последовательность объектов модели или None в случае ошибки.
         """
         query: Update = update(cls.model).returning(cls.model)
@@ -333,7 +333,7 @@ class BaseDAO(   # noqa: WPS214
         """
         Логирует ошибку, связанную с выполнением метода класса.
 
-        Аргументы:
+        Args:
             method_name: Имя метода, в котором произошла ошибка.
             ex: Исключение, которое было вызвано.
             kwargs: Дополнительные параметры для логирования.

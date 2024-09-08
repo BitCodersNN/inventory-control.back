@@ -42,7 +42,7 @@ class UserUpdate(_UserBase):
     """
     Модель для обновления данных пользователя.
 
-    Атрибуты:
+    Attributes:
         login (Optional[str]): Логин пользователя.
         name (Optional[str]): Имя пользователя.
         role (UserRoles): Роль пользователя. По умолчанию - читатель.
@@ -56,7 +56,7 @@ class User(_UserBase):
     """
     Модель пользователя.
 
-    Атрибуты:
+    Attributes:
         user_id (uuid.UUID): Уникальный идентификатор пользователя.
         login (str): Логин пользователя.
         name (str): Имя пользователя.
@@ -72,7 +72,7 @@ class User(_UserBase):
         """
         Конфигурация модели.
 
-        Атрибуты:
+        Attributes:
             from_orm (bool): Флаг для использования ORM-совместимости.
         """
 
@@ -83,7 +83,7 @@ class UserCreateDB(_UserBase):
     """
     Модель для создания нового пользователя в базе данных.
 
-    Атрибуты:
+    Attributes:
         login (str): Логин пользователя.
         name (str): Имя пользователя.
         role (UserRoles): Роль пользователя. По умолчанию - читатель.
@@ -99,7 +99,7 @@ class UserUpdateDB(_UserBase):
     """
     Модель для обновления данных пользователя в базе данных.
 
-    Атрибуты:
+    Attributes:
         login (Optional[str]): Логин пользователя.
         name (Optional[str]): Имя пользователя.
         role (UserRoles): Роль пользователя. По умолчанию - читатель.
