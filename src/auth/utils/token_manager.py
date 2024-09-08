@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
-import jwt
+from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dao.refresh_token import RefreshTokenDAO
@@ -19,15 +19,17 @@ from src.configs.token_config import (
 
 class TokenManager:
     """
-    Класс для управления токенами: создание, обновление и валидация.
+    Управление токенами доступа и обновления.
 
     Methods:
         create_tokens: Генерирует новые токены (доступа и обновления)
                        для указанного пользователя.
 
-        refresh: Обновляет токен доступа, используя токен обновления.
+        refresh: Обновляет токены доступа и обновления на основе старого
+                 токена обновления.
 
-        decode_token: Проверяет действительность токена доступа.
+        decode_token: Декодирует токен доступа и возвращает его
+                      полезную нагрузку.
     """
 
     @classmethod
@@ -37,19 +39,19 @@ class TokenManager:
         user: UserModel,
     ) -> Token:
         """
-        Создаёт токены доступа и обновления для пользователя.
+        Создаёт новые токены доступа и обновления для пользователя.
+
+        Новый токен обновления сохранятся в БД.
 
         Args:
-            session (AsyncSession): Сессия базы данных.
-            user (UserModel): Модель пользователя.
+            session (AsyncSession): Асинхронная сессия для работы с БД.
+            user (UserModel): Модель пользователя, для которого
+            создаются токены.
 
         Returns:
-            Token: Объект с током доступа и обновления.
-
-        Raises:
-            ValueError: Если пользователь не найден.
+            Token: Объект Token, содержащий токены доступа и обновления.
         """
-        access_token: str = await cls._create_access_token(session, user)
+        access_token: str = await cls._create_access_token(user)
         refresh_token: UUID = await cls._create_refresh_token(session, user)
         return Token(access_token=access_token, refresh_token=refresh_token)
 
@@ -61,18 +63,24 @@ class TokenManager:
         user: UserModel,
     ) -> Token:
         """
-        Обновляет токены доступа и обновления.
+        Обновляет токены на основе старого токена обновления.
+
+        Проверяет валидность старого токена обновления и создаёт новые токены.
+        Новый токен обновления сохранятся в БД.
+        Старый токен обновления помечается как отозванный.
 
         Args:
-            session (AsyncSession): Сессия базы данных.
-            old_refresh_token (RefreshTokenModel): Токен обновления.
-            user (UserModel): Модель пользователя.
+            session (AsyncSession): Асинхронная сессия для работы с БД.
+            old_refresh_token (RefreshTokenModel): Старый токен обновления.
+            user (UserModel): Модель пользователя, для которого
+            обновляются токены.
 
         Returns:
-            Token: Новый токен доступа и обновления.
+            Token: Объект Token, содержащий новые токены доступа и обновления.
 
         Raises:
-            ValueError: Если токен не найден или не устарел.
+            ValueError: Если токен обновления не соответствует пользователю
+                        или устарел.
         """
         if old_refresh_token.user_id != user.user_id:
             raise ValueError('user_id != user_id')
@@ -90,20 +98,21 @@ class TokenManager:
         )
 
         return Token(
-            access_token=await cls._create_access_token(session, user),
+            access_token=await cls._create_access_token(user),
             refresh_token=await cls._create_refresh_token(session, user),
         )
 
     @classmethod
     async def decode_token(cls, access_token: str) -> Optional[dict]:
         """
-        Проверяет корректность токена доступа.
+        Декодирует токен доступа и возвращает его полезную нагрузку.
 
         Args:
-            access_token (str): Токен доступа.
+            access_token (str): Токен доступа для декодирования.
 
         Returns:
-            dict: {data}, если токен валиден, иначе {}.
+            Optional[dict]: Декодированная полезная нагрузка токена
+                            или None, если токен недействителен или истек.
         """
         try:
             decoded_payload = jwt.decode(
@@ -111,10 +120,8 @@ class TokenManager:
                 SECRET_KEY,
                 algorithms=[TOKEN_ALG],
             )
-        except jwt.ExpiredSignatureError:
+        except jwt.JWTError:
             return None
-        except jwt.InvalidTokenError:
-            return None  # Здесь можно добавить логику обработки исключения.
 
         return decoded_payload
 
@@ -124,13 +131,13 @@ class TokenManager:
         user: UserModel,
     ) -> str:
         """
-        Создаёт токен доступа для пользователя.
+        Создаёт новый токен доступа для пользователя.
 
         Args:
-            user (UserModel): Модель пользователя.
+            user (UserModel): Модель пользователя, для которого создаётся токен.
 
         Returns:
-            str: Токен доступа.
+            str: Сгенерированный токен доступа.
         """
         created_at: datetime = datetime.now(timezone.utc)
         exp = timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS)
@@ -142,8 +149,8 @@ class TokenManager:
         }
         return jwt.encode(
             token_data,
-            SECRET_KEY=SECRET_KEY,
-            algorithms=[TOKEN_ALG],
+            key=SECRET_KEY,
+            algorithm=TOKEN_ALG,
         )
 
     @classmethod
@@ -153,19 +160,22 @@ class TokenManager:
         user: UserModel,
     ) -> UUID:
         """
-        Создаёт новый refresh токен для пользователя.
+        Создаёт новый токен обновления для пользователя и сохраняет его в БД.
 
         Args:
-            session (AsyncSession): Сессия базы данных.
-            user (UserModel): Модель пользователя.
+            session (AsyncSession): Асинхронная сессия для работы с БД.
+            user (UserModel): Модель пользователя, для которого создаётся токен.
 
         Returns:
-            UUID: UUID нового рефреш токена.
+            UUID: Сгенерированный токен обновления.
         """
         refresh_token: UUID = uuid4()
-        await RefreshTokenDAO.add(session, RefreshTokenCreate(
-            refresh_token=refresh_token,
-            expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
-            user_id=user.user_id,
-        ))
+        await RefreshTokenDAO.add(
+            session,
+            RefreshTokenCreate(
+                refresh_token=refresh_token,
+                expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
+                user_id=user.user_id,
+            ),
+        )
         return refresh_token
