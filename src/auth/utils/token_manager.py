@@ -134,7 +134,7 @@ class TokenManager:
         """
         created_at: datetime = datetime.now(timezone.utc)
         exp = timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS)
-        exp += created_at.utcnow()
+        exp += created_at
         token_data: dict = {
             'sub': user.user_id,
             'iat': created_at,
