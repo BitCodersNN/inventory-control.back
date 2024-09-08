@@ -6,8 +6,7 @@ import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dao.refresh_token import RefreshTokenDAO
-from src.auth.dao.user import UserDAO
-from src.auth.models import RefreshTokenModel, UserModel, UserRoles
+from src.auth.models import RefreshTokenModel, UserModel
 from src.auth.schemas.refresh_token import RefreshTokenCreate
 from src.auth.schemas.token import Token
 from src.configs.token_config import (
