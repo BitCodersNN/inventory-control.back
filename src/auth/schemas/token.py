@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Token(BaseModel):
@@ -15,4 +15,4 @@ class Token(BaseModel):
 
     access_token: str
     refresh_toke: uuid.UUID
-    token_type: str = 'Bearer'
+    token_type: str = Field('Bearer')

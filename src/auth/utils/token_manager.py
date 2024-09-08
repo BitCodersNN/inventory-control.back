@@ -49,7 +49,6 @@ class TokenManager:
         Raises:
             ValueError: Если пользователь не найден.
         """
-
         access_token: str = await cls._create_access_token(session, user)
         refresh_token: UUID = await cls._create_refresh_token(session, user)
         return Token(access_token=access_token, refresh_token=refresh_token)
