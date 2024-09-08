@@ -1,13 +1,13 @@
 import uuid
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Token(BaseModel):
     """
     Класс для представления объекта Token.
 
-    Атрибуты:
+    Attributes:
         access_token (str): Строка, представляющая access токен.
         refresh_token (uuid.UUID): Уникальный идентификатор для refresh токена.
         token_type (str): Тип токена (например, 'Bearer').
@@ -15,4 +15,4 @@ class Token(BaseModel):
 
     access_token: str
     refresh_toke: uuid.UUID
-    token_type: str
+    token_type: str = Field('Bearer')

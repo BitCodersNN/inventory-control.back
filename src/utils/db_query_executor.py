@@ -13,12 +13,12 @@ async def execute_query(
     """
     Выполняет запрос к базе данных.
 
-    Аргументы:
+    Args:
         session: Асинхронная сессия SQLAlchemy.
         query: SQLAlchemy запрос.
         data_in: Дополнительные данные для запроса (по умолчанию None).
 
-    Возвращает:
+    Returns:
         Optional[Result | CursorResult]: Результат выполнения запроса.
     """
     async with session.begin():

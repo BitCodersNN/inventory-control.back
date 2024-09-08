@@ -68,6 +68,8 @@ services:
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      SECRET_KEY: str
+      TOKEN_ALG: HS512
     ports:
       - "8000:8000"
 
