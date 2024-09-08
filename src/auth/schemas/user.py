@@ -11,7 +11,7 @@ class _UserBase(BaseModel):
     """
     Базовая модель пользователя.
 
-    Атрибуты:
+    Attributes:
         login (Optional[str]): Логин пользователя.
         name (Optional[str]): Имя пользователя.
         role (UserRoles): Роль пользователя. По умолчанию - читатель.
@@ -26,7 +26,7 @@ class UserCreate(_UserBase):
     """
     Модель для создания нового пользователя.
 
-    Атрибуты:
+    Attributes:
         login (str): Логин пользователя.
         name (str): Имя пользователя.
         password (str): Пароль пользователя.

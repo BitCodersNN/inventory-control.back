@@ -11,7 +11,7 @@ class UserDAO(BaseDAO[UserModel, UserCreateDB, UserUpdateDB]):
     операций CRUD (создание, чтение, обновление, удаление)
     над объектами модели UserModel.
 
-    Атрибуты:
+    Attributes:
         model (UserModel): Модель данных, с которой работает DAO.
     """
 
