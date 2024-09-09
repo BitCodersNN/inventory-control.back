@@ -1,7 +1,6 @@
 import uvicorn
 
-from src.configs.logger.logger_config import logger
-from src.configs.logger.uvicorn_logger import setup_uvicorn_logger
+from src.configs.logger_settings import logger, setup_uvicorn_logger
 from src.configs.server_config import SERVER_HOST, SERVER_PORT
 
 

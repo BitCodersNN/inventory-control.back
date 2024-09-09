@@ -1,8 +1,10 @@
+# flake8: noqa: WPS300
+
 __all__ = (
     'UserRoles',
     'UserModel',
     'RefreshSessionModel',
 )
 
-from src.auth.models.refresh_session import RefreshSessionModel
-from src.auth.models.users import UserModel, UserRoles
+from .refresh_session import RefreshSessionModel
+from .users import UserModel, UserRoles

@@ -9,6 +9,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql.expression import false
 
 from src.auth.utils.constants import MAX_TOKEN_COUNT
+from src.auth.utils.exceptions import TokenLimitExceededError
+from src.configs.logger_settings import logger
 from src.utils.database_session import BASE
 
 
@@ -68,7 +70,7 @@ def check_token_limit(mapper, connection, target):
         target: Экземпляр модели.
 
     Raises:
-        ValueError: Если превышен лимит токенов.
+        TokenLimitExceededError: Если превышен лимит токенов.
     """
     query = select(
         func.count(),
@@ -79,6 +81,17 @@ def check_token_limit(mapper, connection, target):
     result_of_query = connection.execute(query)
     count = result_of_query.scalar()
     if count >= MAX_TOKEN_COUNT:
-        raise ValueError(
-            f'Превышен лимит токенов у пользователя c id: {target.user_id}.',
+        exception = TokenLimitExceededError(
+            target.user_id,
+            MAX_TOKEN_COUNT,
+            count,
         )
+        logger.error(
+            exception.message,
+            labels={
+                'service': 'auth',
+                'directory': 'models',
+                'model_name': 'refresh_session'
+            }
+        )
+        raise exception

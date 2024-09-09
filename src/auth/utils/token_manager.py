@@ -1,11 +1,17 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Final
 from uuid import UUID, uuid4
 
 from jose import jwt
 
 from src.auth.models import RefreshSessionModel, UserModel
 from src.auth.schemas.token import Token
+from src.auth.utils.exceptions import (
+    InvalidAccessTokenError,
+    InvalidRefreshTokenError,
+    TokenExpiredError,
+)
+from src.configs.logger_settings import logger
 from src.configs.token_config import (
     ACCESS_TOKEN_EXPIRE_SECONDS,
     SECRET_KEY,
@@ -27,6 +33,13 @@ class TokenManager:
         decode_token: Декодирует токен доступа и возвращает его
                       полезную нагрузку.
     """
+
+    _log_level_info: Final = 'INFO'
+
+    _labels_for_logger: Final = {
+        'service': 'auth',
+        'directory': 'utils',
+    }
 
     @classmethod
     async def create_tokens(
@@ -70,22 +83,40 @@ class TokenManager:
             Token: Объект Token, содержащий новые токены доступа и обновления.
 
         Raises:
-            ValueError: Если токен обновления не соответствует пользователю
-                        или устарел.
+            InvalidRefreshTokenException: Токен обновления не соответствует
+            пользователю.
+            TokenExpiredException: Cрок действия токена обновления истек.
         """
         if old_refresh_token.user_id != user.user_id:
-            raise ValueError('user_id != user_id')
+            cls._log_with_labels(
+                cls._log_level_info,
+                (
+                    'Токен обновления не соответствует пользователю.'
+                    f'refresh_token_user_id = {old_refresh_token.user_id}'
+                    f'current_user_id = {user.user_id}'
+                ),
+                cls.refresh.__name__,
+            )
+            raise InvalidRefreshTokenError
 
         created_at: datetime = old_refresh_token.created_at
         expires_in: int = old_refresh_token.expires_in
         date_end: datetime = created_at + timedelta(seconds=expires_in)
         if date_end < datetime.now(timezone.utc):
-            raise ValueError('Рефреш токен устарел.')
+            cls._log_with_labels(
+                cls._log_level_info,
+                (
+                    'Cрок действия токена обновления истек.'
+                    f'refresh_token = {old_refresh_token.token_id}'
+                ),
+                cls.refresh.__name__,
+            )
+            raise TokenExpiredError
 
         return await cls.create_tokens(user)
 
     @classmethod
-    async def decode_token(cls, access_token: str) -> Optional[dict]:
+    async def decode_token(cls, access_token: str) -> dict:
         """
         Декодирует токен доступа и возвращает его полезную нагрузку.
 
@@ -93,8 +124,11 @@ class TokenManager:
             access_token (str): Токен доступа для декодирования.
 
         Returns:
-            Optional[dict]: Декодированная полезная нагрузка токена
-                            или None, если токен недействителен или истек.
+            dict: Декодированная полезная нагрузка токена.
+
+        Raises:
+            TokenExpiredException: Cрок действия токена доступа истек.
+            InvalidAccessTokenException: Неверный токен доступа.
         """
         try:
             decoded_payload = jwt.decode(
@@ -102,8 +136,26 @@ class TokenManager:
                 SECRET_KEY,
                 algorithms=[TOKEN_ALG],
             )
+        except jwt.ExpiredSignatureError:
+            cls._log_with_labels(
+                cls._log_level_info,
+                (
+                    'Cрок действия токена доступа истек.'
+                    f'access_token = {access_token}'
+                ),
+                cls.refresh.__name__,
+            )
+            raise TokenExpiredError
         except jwt.JWTError:
-            return None
+            cls._log_with_labels(
+                cls._log_level_info,
+                (
+                    'Неверный токен доступа.'
+                    f'access_token = {access_token}'
+                ),
+                cls.refresh.__name__,
+            )
+            raise InvalidAccessTokenError
 
         return decoded_payload
 
@@ -146,3 +198,28 @@ class TokenManager:
             UUID: Сгенерированный токен обновления.
         """
         return uuid4()
+
+    @classmethod
+    def _log_with_labels(
+        cls,
+        level,
+        message: str,
+        function_name: str,
+        **kwargs: dict[str, str],
+    ):
+        """
+        Вспомогательная функция для логирования с добавлением labels.
+
+        Args:
+            level (str): Уровень логирования (например, "INFO", "ERROR").
+            message (str): Сообщение для логирования.
+            function_name (str): Имя функции, которая вызывает логирование.
+            kwargs (Dict[str, str]): Дополнительные параметры для логирования.
+        """
+        labels = {
+            **cls._labels_for_logger,
+            'class': cls.__name__,
+            'function_name': function_name,
+            **kwargs,
+        }
+        logger.log(level, message, **labels)
