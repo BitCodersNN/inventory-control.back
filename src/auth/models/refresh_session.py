@@ -91,7 +91,7 @@ def check_token_limit(mapper, connection, target):
             labels={
                 'service': 'auth',
                 'directory': 'models',
-                'model_name': 'refresh_session'
-            }
+                'model': target.__class__.__name__,
+            },
         )
         raise exception
