@@ -51,7 +51,6 @@ class RefreshSessionModel(BASE):
         sa.TIMESTAMP(timezone=True),
         server_default=func.now(),
     )
-    revoked: so.Mapped[bool] = so.mapped_column(default=False)
     user_id: so.Mapped[uuid.UUID] = so.mapped_column(
         UUID,
         sa.ForeignKey('users.user_id', ondelete='CASCADE'),

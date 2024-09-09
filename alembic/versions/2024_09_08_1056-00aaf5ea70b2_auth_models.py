@@ -35,7 +35,6 @@ def upgrade() -> None:
     sa.Column('refresh_token', sa.UUID(), nullable=False),
     sa.Column('expires_in', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('revoked', sa.Boolean(), nullable=False),
     sa.Column('user_id', sa.UUID(), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.user_id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('token_id')

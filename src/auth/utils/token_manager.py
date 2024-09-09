@@ -3,18 +3,11 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 from jose import jwt
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.models import RefreshSessionModel, UserModel
-from src.auth.schemas.refresh_session import (
-    RefreshSessionCreate,
-    RefreshSessionUpdate,
-)
 from src.auth.schemas.token import Token
 from src.configs.token_config import (
     ACCESS_TOKEN_EXPIRE_SECONDS,
-    REFRESH_TOKEN_EXPIRE_SECONDS,
     SECRET_KEY,
     TOKEN_ALG,
 )
@@ -28,7 +21,7 @@ class TokenManager:
         create_tokens: Генерирует новые токены (доступа и обновления)
                        для указанного пользователя.
 
-        refresh: Обновляет токены доступа и обновления на основе старого
+        refresh: Создаёт новые токены доступа и обновления на основе старого
                  токена обновления.
 
         decode_token: Декодирует токен доступа и возвращает его
@@ -38,16 +31,12 @@ class TokenManager:
     @classmethod
     async def create_tokens(
         cls,
-        session: AsyncSession,
         user: UserModel,
     ) -> Token:
         """
         Создаёт новые токены доступа и обновления для пользователя.
 
-        Новый токен обновления сохранятся в БД.
-
         Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
             user (UserModel): Модель пользователя, для которого
             создаются токены.
 
@@ -55,25 +44,24 @@ class TokenManager:
             Token: Объект Token, содержащий токены доступа и обновления.
         """
         access_token: str = await cls._create_access_token(user)
-        refresh_token: UUID = await cls._create_refresh_token(session, user)
-        return Token(access_token=access_token, refresh_token=refresh_token)
+        refresh_token: UUID = await cls._create_refresh_token()
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
 
     @classmethod
     async def refresh(
         cls,
-        session: AsyncSession,
         old_refresh_token: RefreshSessionModel,
         user: UserModel,
     ) -> Token:
         """
-        Обновляет токены на основе старого токена обновления.
+        Создаёт токены на основе старого токена обновления.
 
         Проверяет валидность старого токена обновления и создаёт новые токены.
-        Новый токен обновления сохранятся в БД.
-        Старый токен обновления помечается как отозванный.
 
         Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
             old_refresh_token (RefreshSessionModel): Старый токен обновления.
             user (UserModel): Модель пользователя, для которого
             обновляются токены.
@@ -93,16 +81,8 @@ class TokenManager:
         date_end: datetime = created_at + timedelta(seconds=expires_in)
         if date_end < datetime.now(timezone.utc):
             raise ValueError('Рефреш токен устарел.')
-        RefreshSessionDAO.update(
-            session,
-            RefreshSessionModel.token_id == old_refresh_token.token_id,
-            obj_in=RefreshSessionUpdate(revoked=True),
-        )
 
-        return Token(
-            access_token=await cls._create_access_token(user),
-            refresh_token=await cls._create_refresh_token(session, user),
-        )
+        return await cls.create_tokens(user)
 
     @classmethod
     async def decode_token(cls, access_token: str) -> Optional[dict]:
@@ -158,26 +138,12 @@ class TokenManager:
     @classmethod
     async def _create_refresh_token(
         cls,
-        session: AsyncSession,
-        user: UserModel,
     ) -> UUID:
         """
-        Создаёт новый токен обновления для пользователя и сохраняет его в БД.
-
-        Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
-            user (UserModel): Модель пользователя, для которого создаётся токен.
+        Создаёт новый токен обновления для пользователя.
 
         Returns:
             UUID: Сгенерированный токен обновления.
         """
         refresh_token: UUID = uuid4()
-        await RefreshSessionDAO.add(
-            session,
-            RefreshSessionCreate(
-                refresh_token=refresh_token,
-                expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
-                user_id=user.user_id,
-            ),
-        )
         return refresh_token
