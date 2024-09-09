@@ -48,5 +48,6 @@ class RefreshSessionUpdate(_RefreshSessionBase):
         user_id (Optional[uuid.UUID]): UUID пользователя, связанного с сессией.
         created_at (datetime): Время создания токена
     """
+
     refresh_token: uuid.UUID
     created_at: datetime

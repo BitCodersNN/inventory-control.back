@@ -145,5 +145,4 @@ class TokenManager:
         Returns:
             UUID: Сгенерированный токен обновления.
         """
-        refresh_token: UUID = uuid4()
-        return refresh_token
+        return uuid4()
