@@ -57,17 +57,28 @@ services:
       - redis
       - promtail
     environment:
-      MODE: Release
+      # Build Mode
+      MODE: Debug
+
+      # Loki Logging
       LOKI_URL: http://loki:3100/loki/api/v1/push
+
+      # Server Configuration
       SERVER_HOST: 0.0.0.0
       SERVER_PORT: 8000
+
+      # Database Configuration
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: inventory_control
       POSTGRES_DB: inventory_control
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+
+      # Redis Configuration
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
+      # JWT Configuration
       SECRET_KEY: str
       TOKEN_ALG: HS512
     ports:
