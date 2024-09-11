@@ -1,6 +1,7 @@
+from abc import ABC
 from datetime import datetime, timedelta, timezone
 from typing import Final
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from jose import jwt
 
@@ -11,12 +12,8 @@ from src.auth.utils.exceptions import (
     InvalidRefreshTokenError,
     TokenExpiredError,
 )
+from src.auth.utils.token_strategies.token_strategy import TokenStrategy
 from src.configs.logger_settings import logger
-from src.configs.token_config import (
-    ACCESS_TOKEN_EXPIRE_SECONDS,
-    SECRET_KEY,
-    TOKEN_ALG,
-)
 
 
 class TokenManager:
@@ -39,9 +36,18 @@ class TokenManager:
         'directory': 'utils',
     }
 
-    @classmethod
-    async def create_tokens(
-        cls,
+    def __init__(self, strategy: TokenStrategy):
+        """
+        Инициализация класса TokenManager.
+
+        Аргументы:
+            strategy (TokenStrategy): Стратегия для создания
+            и декодирования токенов.
+        """
+        self.strategy = strategy
+
+    def create_tokens(
+        self,
         user: UserModel,
     ) -> Token:
         """
@@ -54,16 +60,15 @@ class TokenManager:
         Returns:
             Token: Объект Token, содержащий токены доступа и обновления.
         """
-        access_token: str = await cls._create_access_token(user)
-        refresh_token: UUID = await cls._create_refresh_token()
+        access_token: str = self.strategy.create_access_token(user)
+        refresh_token: UUID = self.strategy.create_refresh_token()
         return Token(
             access_token=access_token,
             refresh_token=refresh_token,
         )
 
-    @classmethod
-    async def refresh(
-        cls,
+    def refresh(
+        self,
         old_refresh_token: RefreshSessionModel,
         user: UserModel,
     ) -> Token:
@@ -109,10 +114,9 @@ class TokenManager:
             )
             raise TokenExpiredError
 
-        return await cls.create_tokens(user)
+        return self.create_tokens(user)
 
-    @classmethod
-    async def decode_token(cls, access_token: str) -> dict:
+    def decode_token(self, access_token: str) -> dict:
         """
         Декодирует токен доступа и возвращает его полезную нагрузку.
 
@@ -127,11 +131,7 @@ class TokenManager:
             InvalidAccessTokenException: Неверный токен доступа.
         """
         try:
-            decoded_payload = jwt.decode(
-                access_token,
-                SECRET_KEY,
-                algorithms=[TOKEN_ALG],
-            )
+            decoded_payload = self.strategy.decode_token(access_token)
         except jwt.ExpiredSignatureError:
             logger.info(
                 (
@@ -152,43 +152,3 @@ class TokenManager:
             raise InvalidAccessTokenError
 
         return decoded_payload
-
-    @classmethod
-    async def _create_access_token(
-        cls,
-        user: UserModel,
-    ) -> str:
-        """
-        Создаёт новый токен доступа для пользователя.
-
-        Args:
-            user (UserModel): Модель пользователя, для которого создаётся токен.
-
-        Returns:
-            str: Сгенерированный токен доступа.
-        """
-        created_at: datetime = datetime.now(timezone.utc)
-        exp = timedelta(seconds=ACCESS_TOKEN_EXPIRE_SECONDS)
-        exp += created_at
-        token_data: dict = {
-            'sub': user.user_id,
-            'iat': created_at,
-            'exp': exp,
-        }
-        return jwt.encode(
-            token_data,
-            key=SECRET_KEY,
-            algorithm=TOKEN_ALG,
-        )
-
-    @classmethod
-    async def _create_refresh_token(
-        cls,
-    ) -> UUID:
-        """
-        Создаёт новый токен обновления для пользователя.
-
-        Returns:
-            UUID: Сгенерированный токен обновления.
-        """
-        return uuid4()
