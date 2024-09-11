@@ -1,8 +1,8 @@
 __all__ = (
     'UserRoles',
     'UserModel',
-    'RefreshTokenModel',
+    'RefreshSessionModel',
 )
 
-from src.auth.models.refresh_tokens import RefreshTokenModel
+from src.auth.models.refresh_session import RefreshSessionModel
 from src.auth.models.users import UserModel, UserRoles
