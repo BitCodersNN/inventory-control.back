@@ -14,5 +14,5 @@ class Token(BaseModel):
     """
 
     access_token: str
-    refresh_toke: uuid.UUID
+    refresh_token: uuid.UUID
     token_type: str = Field('Bearer')

@@ -12,7 +12,7 @@ from src.auth.utils.constants import MAX_TOKEN_COUNT
 from src.utils.database_session import BASE
 
 
-class RefreshTokenModel(BASE):
+class RefreshSessionModel(BASE):
     """
     Модель для хранения информации о refresh токенах.
 
@@ -35,7 +35,7 @@ class RefreshTokenModel(BASE):
 
     """
 
-    __tablename__ = 'refresh_tokens'
+    __tablename__ = 'refresh_sessions'
 
     token_id: so.Mapped[int] = so.mapped_column(
         primary_key=True,
@@ -51,14 +51,13 @@ class RefreshTokenModel(BASE):
         sa.TIMESTAMP(timezone=True),
         server_default=func.now(),
     )
-    revoked: so.Mapped[bool] = so.mapped_column(default=False)
     user_id: so.Mapped[uuid.UUID] = so.mapped_column(
         UUID,
         sa.ForeignKey('users.user_id', ondelete='CASCADE'),
     )
 
 
-@event.listens_for(RefreshTokenModel, 'before_insert')
+@event.listens_for(RefreshSessionModel, 'before_insert')
 def check_token_limit(mapper, connection, target):
     """
     Проверка лимита токенов перед вставкой.
@@ -74,8 +73,8 @@ def check_token_limit(mapper, connection, target):
     query = select(
         func.count(),
     ).filter(
-        RefreshTokenModel.user_id == target.user_id,
-        RefreshTokenModel.revoked == false(),
+        RefreshSessionModel.user_id == target.user_id,
+        RefreshSessionModel.revoked == false(),
     )
     result_of_query = connection.execute(query)
     count = result_of_query.scalar()
