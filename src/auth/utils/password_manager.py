@@ -26,19 +26,19 @@ class PasswordManager:
 
     def __init__(
         self,
-        pwd_context: Optional[CryptContext] = None,
+        crypt_context: Optional[CryptContext] = None,
     ):
         """
         Инициализация объекта PasswordManager.
 
         Args:
-            pwd_context (Optional[CryptContext]): Опциональный объект
+            crypt_context (Optional[CryptContext]): Опциональный объект
             CryptContext для шифрования паролей. Если не указан,
             будет использоваться контекст по умолчанию.
         """
-        self.pwd_context = pwd_context or self._default_crypt_context
+        self.pwd_context = crypt_context or self._default_crypt_context
 
-    def is_valid_password(
+    def compare(
         self,
         plain_password: str,
         hashed_password: str,
@@ -60,7 +60,7 @@ class PasswordManager:
             hashed_password,
         )
 
-    def get_password_hash(
+    def hash(
         self,
         password: str,
     ) -> str:
