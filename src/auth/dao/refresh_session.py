@@ -16,7 +16,7 @@ class RefreshSessionDAO(
     операций CRUD (создание, чтение, обновление, удаление)
     над объектами модели RefreshSessionModel.
 
-    Атрибуты:
+    Attributes:
         model (RefreshSessionModel): Модель данных, с которой работает DAO.
     """
 
