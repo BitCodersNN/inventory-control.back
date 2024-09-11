@@ -36,7 +36,7 @@ class PasswordManager:
             CryptContext для шифрования паролей. Если не указан,
             будет использоваться контекст по умолчанию.
         """
-        self.pwd_context = crypt_context or self._default_crypt_context
+        self.crypt_context = crypt_context or self._default_crypt_context
 
     def compare(
         self,
@@ -55,7 +55,7 @@ class PasswordManager:
             bool: True, если открытый пароль соответствует хешированному
             паролю, иначе False.
         """
-        return self.pwd_context.verify(
+        return self.crypt_context.verify(
             plain_password,
             hashed_password,
         )
@@ -73,4 +73,4 @@ class PasswordManager:
         Returns:
             str: Хеш открытого пароля.
         """
-        return self.pwd_context.hash(password)
+        return self.crypt_context.hash(password)
