@@ -5,16 +5,16 @@ from uuid import UUID, uuid4
 from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.dao.refresh_token import RefreshTokenDAO
-from src.auth.models import RefreshTokenModel, UserModel
-from src.auth.schemas.refresh_token import RefreshTokenCreate
-from src.auth.schemas.token import Token
-from src.configs.token_config import (
+from src.auth.configs.token_config import (
     ACCESS_TOKEN_EXPIRE_SECONDS,
     REFRESH_TOKEN_EXPIRE_SECONDS,
     SECRET_KEY,
     TOKEN_ALG,
 )
+from src.auth.dao.refresh_token import RefreshTokenDAO
+from src.auth.models import RefreshTokenModel, UserModel
+from src.auth.schemas.refresh_token import RefreshTokenCreate
+from src.auth.schemas.token import Token
 
 
 class TokenManager:
