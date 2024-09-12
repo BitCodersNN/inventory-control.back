@@ -34,8 +34,6 @@ class TokenManager:
                       полезную нагрузку.
     """
 
-    _log_level_info: Final = 'INFO'
-
     _labels_for_logger: Final = {
         'service': 'auth',
         'directory': 'utils',
@@ -88,14 +86,13 @@ class TokenManager:
             TokenExpiredException: Cрок действия токена обновления истек.
         """
         if old_refresh_token.user_id != user.user_id:
-            cls._log_with_labels(
-                cls._log_level_info,
+            logger.info(
                 (
                     'Токен обновления не соответствует пользователю.'
                     f'refresh_token_user_id = {old_refresh_token.user_id}'
                     f'current_user_id = {user.user_id}'
                 ),
-                cls.refresh.__name__,
+                labels=cls._labels_for_logger,
             )
             raise InvalidRefreshTokenError
 
@@ -103,13 +100,12 @@ class TokenManager:
         expires_in: int = old_refresh_token.expires_in
         date_end: datetime = created_at + timedelta(seconds=expires_in)
         if date_end < datetime.now(timezone.utc):
-            cls._log_with_labels(
-                cls._log_level_info,
+            logger.info(
                 (
                     'Cрок действия токена обновления истек.'
                     f'refresh_token = {old_refresh_token.token_id}'
                 ),
-                cls.refresh.__name__,
+                labels=cls._labels_for_logger,
             )
             raise TokenExpiredError
 
@@ -137,23 +133,21 @@ class TokenManager:
                 algorithms=[TOKEN_ALG],
             )
         except jwt.ExpiredSignatureError:
-            cls._log_with_labels(
-                cls._log_level_info,
+            logger.info(
                 (
                     'Cрок действия токена доступа истек.'
                     f'access_token = {access_token}'
                 ),
-                cls.refresh.__name__,
+                labels=cls._labels_for_logger,
             )
             raise TokenExpiredError
         except jwt.JWTError:
-            cls._log_with_labels(
-                cls._log_level_info,
+            logger.info(
                 (
                     'Неверный токен доступа.'
                     f'access_token = {access_token}'
                 ),
-                cls.refresh.__name__,
+                labels=cls._labels_for_logger,
             )
             raise InvalidAccessTokenError
 
@@ -198,28 +192,3 @@ class TokenManager:
             UUID: Сгенерированный токен обновления.
         """
         return uuid4()
-
-    @classmethod
-    def _log_with_labels(
-        cls,
-        level,
-        message: str,
-        function_name: str,
-        **kwargs: dict[str, str],
-    ):
-        """
-        Вспомогательная функция для логирования с добавлением labels.
-
-        Args:
-            level (str): Уровень логирования (например, "INFO", "ERROR").
-            message (str): Сообщение для логирования.
-            function_name (str): Имя функции, которая вызывает логирование.
-            kwargs (Dict[str, str]): Дополнительные параметры для логирования.
-        """
-        labels = {
-            **cls._labels_for_logger,
-            'class': cls.__name__,
-            'function_name': function_name,
-            **kwargs,
-        }
-        logger.log(level, message, **labels)

@@ -7,11 +7,11 @@ from src.configs.logger_settings.console_logger import CONSOLE_HANDLERS
 from src.configs.logger_settings.loki_logger import LOKI_LOGGER_HANDLER
 
 
-def _error_with_exception(message, *args, **kwargs):
+def _error_with_exception(message: str, *args, **kwargs):
     logger.opt(exception=True).error(message, *args, **kwargs)
 
 
-def _critical_with_exception(message, *args, **kwargs):
+def _critical_with_exception(message: str, *args, **kwargs):
     logger.opt(exception=True).critical(message, *args, **kwargs)
 
 

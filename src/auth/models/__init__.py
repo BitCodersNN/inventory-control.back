@@ -1,5 +1,3 @@
-# flake8: noqa: WPS300
-
 __all__ = (
     'UserRoles',
     'UserModel',
