@@ -84,4 +84,3 @@ class TokenStrategy(ABC):
         Returns:
             dict: Декодированные данные токена.
         """
-        pass  # noqa: WPS420

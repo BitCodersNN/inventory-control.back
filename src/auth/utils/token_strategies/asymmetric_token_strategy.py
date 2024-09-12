@@ -48,7 +48,7 @@ class AsymmetricTokenStrategy(TokenStrategy):
         Returns:
             dict: Декодированные данные токена.
 
-        Raises :
+        Raises:
             JWTError: Если подпись каким-либо образом недействительна.
             ExpiredSignatureError: Если срок действия подписи истек.
             JWTClaimsError: Если какое-либо утверждение недействительно
