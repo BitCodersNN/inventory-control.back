@@ -29,7 +29,7 @@ class TokenManager:
     """
 
     @classmethod
-    async def create_tokens(
+    def create_tokens(
         cls,
         user: UserModel,
     ) -> Token:
@@ -43,15 +43,15 @@ class TokenManager:
         Returns:
             Token: Объект Token, содержащий токены доступа и обновления.
         """
-        access_token: str = await cls._create_access_token(user)
-        refresh_token: UUID = await cls._create_refresh_token()
+        access_token: str = cls._create_access_token(user)
+        refresh_token: UUID = cls._create_refresh_token()
         return Token(
             access_token=access_token,
             refresh_token=refresh_token,
         )
 
     @classmethod
-    async def refresh(
+    def refresh(
         cls,
         old_refresh_token: RefreshSessionModel,
         user: UserModel,
@@ -82,10 +82,10 @@ class TokenManager:
         if date_end < datetime.now(timezone.utc):
             raise ValueError('Рефреш токен устарел.')
 
-        return await cls.create_tokens(user)
+        return cls.create_tokens(user)
 
     @classmethod
-    async def decode_token(cls, access_token: str) -> Optional[dict]:
+    def decode_token(cls, access_token: str) -> Optional[dict]:
         """
         Декодирует токен доступа и возвращает его полезную нагрузку.
 
@@ -102,13 +102,15 @@ class TokenManager:
                 SECRET_KEY,
                 algorithms=[TOKEN_ALG],
             )
+        except jwt.ExpiredSignatureError:
+            return None
         except jwt.JWTError:
             return None
 
         return decoded_payload
 
     @classmethod
-    async def _create_access_token(
+    def _create_access_token(
         cls,
         user: UserModel,
     ) -> str:
@@ -136,7 +138,7 @@ class TokenManager:
         )
 
     @classmethod
-    async def _create_refresh_token(
+    def _create_refresh_token(
         cls,
     ) -> UUID:
         """
