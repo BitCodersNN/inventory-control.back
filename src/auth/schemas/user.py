@@ -24,7 +24,7 @@ class _UserBase(BaseModel):
 
 class UserAuth(BaseModel):
     """
-    Базовая модель пользователя.
+    Модель для авторизации.
 
     Attributes:
         login (str): Логин пользователя.

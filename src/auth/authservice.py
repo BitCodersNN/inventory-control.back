@@ -20,9 +20,13 @@ class AuthService:
     Methods:
         authenticate: Проверяет подлинность пользователя,
                       возвращая токены, если учетные данные верны.
+
         identification: Проверяет действительность токена доступа.
+
         create_token: Создает новый токен доступа для пользователя.
+
         logout: Удаляет токен обновления для заданного пользователя.
+
         logout_from_all_devices: Удаляет все токены обновления
                                  для заданного пользователя.
     """
@@ -93,6 +97,7 @@ class AuthService:
 
         Args:
             session (AsyncSession): Асинхронная сессия для работы с БД.
+
             user_id (int): Идентификатор пользователя, для
                            которого создается токен.
 
@@ -138,6 +143,7 @@ class AuthService:
         Args:
             token (Token): Токен доступа пользователя для
                            идентификации.
+
             session (AsyncSession): Асинхронная сессия для работы с БД.
         """
         user_id: int = await TokenManager.decode_token(
