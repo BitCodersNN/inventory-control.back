@@ -5,7 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.dao.user import UserDAO
 from src.auth.models import RefreshSessionModel, UserModel
-from src.auth.schemas.refresh_session import RefreshSessionCreate
+from src.auth.schemas.refresh_session import (
+    RefreshSessionCreate,
+    RefreshSessionUpdate,
+)
 from src.auth.schemas.token import Token
 from src.auth.schemas.user import UserAuth
 from src.auth.utils.password_manager import PasswordManager
@@ -23,7 +26,7 @@ class AuthService:
 
         identification: Проверяет действительность токена доступа.
 
-        create_token: Создает новый токен доступа для пользователя.
+        refresh: Создает новый токен доступа для пользователя.
 
         logout: Удаляет токен обновления для заданного пользователя.
 
@@ -53,21 +56,22 @@ class AuthService:
             session,
             UserModel.login == user_auth.login,
         )
-        if not user:
+        if user in None:
             return None
 
-        if PasswordManager().compare(user_auth.password, user.pass_hash):
-            token: Token = TokenManager.create_tokens(user)
-            await RefreshSessionDAO.add(
-                session,
-                RefreshSessionCreate(
-                    refresh_token=token.refresh_token,
-                    expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
-                    user_id=user.user_id,
-                ),
-            )
-            return token
-        return None
+        if not PasswordManager().compare(user_auth.password, user.pass_hash):
+            return None
+
+        token: Token = TokenManager.create_tokens(user)
+        await RefreshSessionDAO.add(
+            session,
+            RefreshSessionCreate(
+                refresh_token=token.refresh_token,
+                expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
+                user_id=user.user_id,
+            ),
+        )
+        return token
 
     @classmethod
     def identification(
@@ -84,13 +88,13 @@ class AuthService:
             bool: Возвращает True, если токен действителен,
                   иначе False.
         """
-        return bool(TokenManager.decode_token(token.access_token))
+        return TokenManager.decode_token(token.access_token) is None
 
     @classmethod
-    async def create_token(
+    async def refresh(
         cls,
         session: AsyncSession,
-        user_id: int,
+        token: Token,
     ) -> Optional[Token]:
         """
         Создает новый токен доступа для указанного пользователя.
@@ -98,20 +102,38 @@ class AuthService:
         Args:
             session (AsyncSession): Асинхронная сессия для работы с БД.
 
-            user_id (int): Идентификатор пользователя, для
-                           которого создается токен.
+            token (Token): Токен, который необходимо проверить.
 
         Returns:
             Optional[Token]: Возвращает новый объект Token, или
                              None, если пользователь не найден.
         """
+        user_id: int = await TokenManager.decode_token(
+            token.access_token,
+        )['sub']
         user: Optional[UserModel] = await UserDAO.find_one_or_none(
             session,
             UserModel.user_id == user_id,
         )
-        if not user:
+        if user is None:
             return None
-        return TokenManager.create_tokens(user)
+
+        refresh_session: Optional[RefreshSessionModel]
+        refresh_session = RefreshSessionDAO.find_one_or_none(
+            session,
+            RefreshSessionModel.refresh_token == token.refresh_token,
+        )
+        if refresh_session is None:
+            return None
+        token: Token = TokenManager.create_tokens(user)
+        await RefreshSessionDAO.update(
+            session,
+            RefreshSessionModel.token_id == refresh_session.token_id,
+            obj_in=RefreshSessionUpdate(
+                refresh_token=token.refresh_token,
+            ),
+        )
+        return token
 
     @classmethod
     async def logout(

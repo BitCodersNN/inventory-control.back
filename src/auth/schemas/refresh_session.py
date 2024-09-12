@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -50,4 +50,4 @@ class RefreshSessionUpdate(_RefreshSessionBase):
     """
 
     refresh_token: uuid.UUID
-    created_at: datetime
+    created_at: datetime = Field(datetime.now(timezone.utc))
