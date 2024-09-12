@@ -19,6 +19,7 @@ redis = "^5.0.8"
 loki-logger-handler = "^0.1.4"
 requests = "^2.32.3"
 python-jose = "^3.3.0"
+passlib = "^1.7.4"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
