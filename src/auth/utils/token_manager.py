@@ -96,7 +96,7 @@ class TokenManager:
                     f'refresh_token_user_id = {old_refresh_token.user_id}'
                     f'current_user_id = {user.user_id}'
                 ),
-                labels=cls._labels_for_logger,
+                labels=self._labels_for_logger,
             )
             raise InvalidRefreshTokenError
 
@@ -109,7 +109,7 @@ class TokenManager:
                     'Cрок действия токена обновления истек.'
                     f'refresh_token = {old_refresh_token.token_id}'
                 ),
-                labels=cls._labels_for_logger,
+                labels=self._labels_for_logger,
             )
             raise TokenExpiredError
 
@@ -137,7 +137,7 @@ class TokenManager:
                     'Cрок действия токена доступа истек.'
                     f'access_token = {access_token}'
                 ),
-                labels=cls._labels_for_logger,
+                labels=self._labels_for_logger,
             )
             raise TokenExpiredError
         except jwt.JWTError:
@@ -146,7 +146,7 @@ class TokenManager:
                     'Неверный токен доступа.'
                     f'access_token = {access_token}'
                 ),
-                labels=cls._labels_for_logger,
+                labels=self._labels_for_logger,
             )
             raise InvalidAccessTokenError
 
