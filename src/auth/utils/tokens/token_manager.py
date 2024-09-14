@@ -146,7 +146,7 @@ class TokenManager:  # noqa: WPS214
             refresh_session,
             user_id,
         )
-        return self.create_tokens(user_id)
+        return self.create_token(user_id)
 
     def decode_token(self, access_token: str) -> dict:
         """
