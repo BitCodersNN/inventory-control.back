@@ -2,7 +2,7 @@ import re
 
 import uvicorn
 
-from src.configs.logger.logger_config import logger
+from src.configs.logger_settings.logger_config import logger
 
 
 def _determine_log_level(message):
