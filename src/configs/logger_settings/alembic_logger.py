@@ -1,6 +1,6 @@
 import logging
 
-from src.configs.logger.logger_config import logger
+from src.configs.logger_settings.logger_config import logger
 
 
 class _LoguruHandler(logging.Handler):

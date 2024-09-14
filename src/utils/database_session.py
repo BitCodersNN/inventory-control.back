@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import NullPool
 
 from src.configs.db_config import ASYNC_POSTGRES_URL
-from src.configs.logger.logger_config import logger
+from src.configs.logger_settings.logger_config import logger
 
 BASE: Final = declarative_base()
 
