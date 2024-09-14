@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 from src.auth.models import RefreshSessionModel
 from src.auth.schemas.token import Token
@@ -34,19 +35,24 @@ class TokenFacade:  # noqa: WPS214
     def __init__(
         self,
         access_token_expire_seconds: int,
-        verification_key: str,
-        secret_key: str,
         algorithm_name: str,
+        secret_key: str,
+        verification_key: Optional[str],
     ):
         """
         Инициализация класса TokenFacade.
 
         Args:
             access_token_expire_seconds (int): Время жизни токена доступа в сек.
-            verification_key (str): Ключ для проверки подлинности токена.
-            secret_key (str): Секретный ключ, используемый для подписи токенов.
             algorithm_name (str): Название алгоритма, подписывающего токены.
+            secret_key (str): Секретный ключ, используемый для подписи токенов.
+            verification_key (Optional[str]): Ключ для проверки подписи токенов.
+            Если не указан, используется secret_key.
         """
+        verification_key = verification_key if (
+            verification_key is not None
+        ) else secret_key
+
         self._token_factory = TokenFactory(
             access_token_expire_seconds,
             secret_key,
