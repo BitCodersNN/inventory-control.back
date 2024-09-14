@@ -28,7 +28,7 @@ isort = "^5.13.2"
 
 [tool.poetry.scripts]
 app = "src.__main__:main"
-jwt_key_generator = "src.auth.scripts.jwt_key_generator:main"
+jwt_key_generation = "src.auth.scripts.jwt_key_generation.__main__:_main"
 
 [build-system]
 requires = ["poetry-core"]
