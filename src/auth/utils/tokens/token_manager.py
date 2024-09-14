@@ -10,9 +10,9 @@ from src.auth.utils.tokens.refresh_session_validator import (
 from src.auth.utils.tokens.token_factory import TokenFactory
 
 
-class TokenFacade:  # noqa: WPS214
+class TokenManager:  # noqa: WPS214
     """
-    Фасад для управления токенами доступа и обновления.
+    Управление токенами доступа и обновления.
 
     Attributes:
         _token_factory (TokenFactory): Фабрика для создания токенов.
@@ -114,7 +114,7 @@ class TokenFacade:  # noqa: WPS214
             raise ValueError('Ключ проверки должен быть строкой')
         self._access_token_decoder.verification_key = verification_key
 
-    def create_tokens(self, user_id: uuid.UUID):
+    def create_token(self, user_id: uuid.UUID) -> Token:
         """
         Создает токены доступа и обновления для указанного пользователя.
 
@@ -124,17 +124,13 @@ class TokenFacade:  # noqa: WPS214
         Returns:
             Token: Объект, содержащий токены доступа и обновления.
         """
-        access_token = self._token_factory.create_access_token(
-            user_id=user_id,
-        )
-        refresh_token = self._token_factory.create_refresh_token()
+        return self._token_factory.create_token(user_id)
 
-        return Token(
-            access_token=access_token,
-            refresh_token=refresh_token,
-        )
-
-    def refresh(self, refresh_session: RefreshSessionModel, user_id: uuid.UUID):
+    def refresh(
+        self,
+        refresh_session: RefreshSessionModel,
+        user_id: uuid.UUID,
+    ) -> Token:
         """
         Обновляет токены доступа и обновления.
 
@@ -152,7 +148,7 @@ class TokenFacade:  # noqa: WPS214
         )
         return self.create_tokens(user_id)
 
-    def decode_token(self, access_token: str):
+    def decode_token(self, access_token: str) -> dict:
         """
         Декодирует токен доступа и возвращает его полезную нагрузку.
 

@@ -1,7 +1,9 @@
+import uuid
 from datetime import datetime, timedelta, timezone
-from uuid import UUID, uuid4
 
 from jose import jwt
+
+from src.auth.schemas.token import Token
 
 
 class TokenFactory:
@@ -64,17 +66,42 @@ class TokenFactory:
             raise ValueError('Секретный ключ должен быть строкой')
         self.secret_key = secret_key
 
-    def create_access_token(
+    def create_token(
         self,
-        user_id,
+        user_id: uuid.UUID,
+    ) -> Token:
+        """
+        Создает и возвращает токены доступа и обновления для пользователя.
+
+        Args:
+            user_id (int): ID пользователя, для которого создается
+            токен подтверждения доступа.
+
+        Returns:
+            Token: Объект Token, содержащий токены доступа и обновления.
+        """
+        access_token = self._create_access_token(
+            user_id=user_id,
+        )
+        refresh_token = self._create_refresh_token()
+
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+    def _create_access_token(
+        self,
+        user_id: uuid.UUID,
     ) -> str:
         """
         Создает токен доступа для указанного пользователя.
 
-        Аргументы:
-            user_id: ID пользователя, для которого создается токен доступа.
+        Args:
+            user_id (int): ID пользователя, для которого создается
+            токен подтверждения доступа.
 
-        Возвращает:
+        Returns:
             str: Сгенерированный токен доступа.
         """
         created_at: datetime = datetime.now(timezone.utc)
@@ -91,11 +118,11 @@ class TokenFactory:
             algorithm=self._algorithm_name,
         )
 
-    def create_refresh_token(self) -> UUID:
+    def _create_refresh_token(self) -> uuid.UUID:
         """
         Создает новый токен обновления.
 
-        Возвращает:
+        Returns:
             UUID: Уникальный идентификатор токена обновления.
         """
-        return uuid4()
+        return uuid.uuid4()
