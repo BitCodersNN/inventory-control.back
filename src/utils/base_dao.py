@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Delete, Insert, Select, Update
 
-from src.configs.logger.logger_config import logger
+from src.configs.logger_settings.logger_config import logger
 from src.utils.database_session import BASE
 from src.utils.db_query_executor import execute_query
 

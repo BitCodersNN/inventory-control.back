@@ -4,5 +4,5 @@ __all__ = (
     'RefreshSessionModel',
 )
 
-from src.auth.models.refresh_session import RefreshSessionModel
-from src.auth.models.users import UserModel, UserRoles
+from .refresh_session import RefreshSessionModel
+from .users import UserModel, UserRoles
