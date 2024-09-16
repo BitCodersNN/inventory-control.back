@@ -1,4 +1,8 @@
-from typing import Optional
+# flake8: noqa
+
+from functools import wraps
+from typing import Callable, Optional
+from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,57 +16,81 @@ from src.auth.schemas.refresh_session import (
 from src.auth.schemas.token import Token
 from src.auth.schemas.user import UserAuth
 from src.auth.utils.password_manager import PasswordManager
-from src.auth.utils.token_manager import TokenManager
-from src.configs.token_config import REFRESH_TOKEN_EXPIRE_SECONDS
+from src.auth.utils.tokens.token_manager import TokenManager
+from src.configs.token_config import (
+    ACCESS_TOKEN_EXPIRE_SECONDS,
+    REFRESH_TOKEN_EXPIRE_SECONDS,
+    SECRET_KEY,
+    TOKEN_ALG,
+)
 
 
 class AuthService:
     """
-    Служба аутентификации пользователя.
+    User authentication service.
 
     Methods:
-        authenticate: Проверяет подлинность пользователя,
-                      возвращая токены, если учетные данные верны.
-
-        identification: Проверяет действительность токена доступа.
-
-        refresh: Создает новый токен доступа для пользователя.
-
-        logout: Удаляет токен обновления для заданного пользователя.
-
-        logout_from_all_devices: Удаляет все токены обновления
-                                 для заданного пользователя.
+        authenticate: Validates user credentials and returns tokens.
+        identification: Decorator for token validation.
+        refresh: Creates a new access token for a user.
+        logout: Removes the refresh token for a user.
+        logout_from_all_devices: Removes all refresh tokens for a user.
     """
 
+    def __init__(self) -> None:
+        """Инициализация класса TokenFacade."""
+        self.tokenManager = TokenManager(
+            ACCESS_TOKEN_EXPIRE_SECONDS,
+            TOKEN_ALG,
+            SECRET_KEY,
+        )
+
     @classmethod
-    async def authenticate(
+    async def logout(
         cls,
+        session: AsyncSession,
+        token: Token,
+    ):
+        """
+        Removes the refresh token for a user.
+
+        Args:
+            session: Async session for DB operations.
+            token: User access token.
+        """
+        await RefreshSessionDAO.delete(
+            session,
+            RefreshSessionModel.refresh_token == token.refresh_token,
+        )
+
+    async def authenticate(
+        self,
         session: AsyncSession,
         user_auth: UserAuth,
     ) -> Optional[Token]:
         """
-        Проверяет подлинность пользователя по учетным данным и создает токены.
+        Validates user credentials and generates tokens.
 
         Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
-            user_auth (UserAuth): Учетные данные пользователя (логин и пароль).
+            session: Async session for DB operations.
+            user_auth: User credentials (login and password).
 
         Returns:
-            Optional[Token]: Возвращает объект Token, содержащий
-                             токены доступа и обновления, или None,
-                             если аутентификация не удалась.
+            Optional[Token]: Token object with access and
+                                    refresh tokens or None.
         """
         user: Optional[UserModel] = await UserDAO.find_one_or_none(
             session,
             UserModel.login == user_auth.login,
         )
-        if user in None:
+
+        if user is None:  # Check if user exists
             return None
 
         if not PasswordManager().compare(user_auth.password, user.pass_hash):
-            return None
+            return None  # Invalid password
 
-        token: Token = TokenManager.create_tokens(user)
+        token: Token = self.tokenManager.create_token(user.user_id)
         await RefreshSessionDAO.add(
             session,
             RefreshSessionCreate(
@@ -73,42 +101,62 @@ class AuthService:
         )
         return token
 
-    @classmethod
-    def identification(
-        cls,
-        token: Token,
+    def _verify_token(
+        self,
+        access_token: str,
     ) -> bool:
         """
-        Проверяет действительность токена доступа.
+        Checks if the access token is valid.
 
         Args:
-            token (Token): Токен, который необходимо проверить.
+            access_token: Token to validate.
 
         Returns:
-            bool: Возвращает True, если токен действителен,
-                  иначе False.
+            bool: True if valid, False otherwise.
         """
-        return TokenManager.decode_token(token.access_token) is None
+        return self.tokenManager.decode_token(access_token) is not None
 
-    @classmethod
+    def identification(
+        self,
+        func: Callable,
+    ) -> Callable:
+        """
+        Decorator to check access token validity.
+
+        Args:
+            func: Function to decorate.
+
+        Returns:
+            Callable: Wrapped function with token validation.
+        """
+
+        @wraps(func)
+        def ind_decorate(*args, **kwargs):  # noqa: WPS430
+            access_token = kwargs.get('access_token')
+            if not access_token:
+                raise KeyError('access_token is missing in kwargs')
+            if not isinstance(access_token, str):
+                raise ValueError('access_token must be a string')
+            return self._verify_token(access_token)
+
+        return ind_decorate
+
     async def refresh(
-        cls,
+        self,
         session: AsyncSession,
         token: Token,
     ) -> Optional[Token]:
         """
-        Создает новый токен доступа для указанного пользователя.
+        Creates a new access token for a user.
 
         Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
-
-            token (Token): Токен, который необходимо проверить.
+            session: Async session for DB operations.
+            token: Token to validate for creating a new access token.
 
         Returns:
-            Optional[Token]: Возвращает новый объект Token, или
-                             None, если пользователь не найден.
+            Optional[Token]: New Token object or None if invalid.
         """
-        user_id: int = await TokenManager.decode_token(
+        user_id: UUID = await self.tokenManager.decode_token(
             token.access_token,
         )['sub']
         user: Optional[UserModel] = await UserDAO.find_one_or_none(
@@ -119,13 +167,14 @@ class AuthService:
             return None
 
         refresh_session: Optional[RefreshSessionModel]
-        refresh_session = RefreshSessionDAO.find_one_or_none(
+        refresh_session = await RefreshSessionDAO.find_one_or_none(
             session,
             RefreshSessionModel.refresh_token == token.refresh_token,
         )
         if refresh_session is None:
             return None
-        token: Token = TokenManager.create_tokens(user)
+
+        token: Token = self.tokenManager.create_token(user_id)
         await RefreshSessionDAO.update(
             session,
             RefreshSessionModel.token_id == refresh_session.token_id,
@@ -135,40 +184,19 @@ class AuthService:
         )
         return token
 
-    @classmethod
-    async def logout(
-        cls,
-        session: AsyncSession,
-        token: Token,
-    ):
-        """
-        Удаляет токен обновления для заданного пользователя.
-
-        Args:
-            session (AsyncSession): Асинхронная сессия для работы с БД.
-            token (Token): Токен доступа пользователя.
-        """
-        await RefreshSessionDAO.delete(
-            session,
-            RefreshSessionModel.refresh_token == token.refresh_token,
-        )
-
-    @classmethod
     async def logout_from_all_devices(
-        cls,
+        self,
         token: Token,
         session: AsyncSession,
     ):
         """
-        Удаляет все токены обновления для заданного пользователя.
+        Removes all refresh tokens for a user.
 
         Args:
-            token (Token): Токен доступа пользователя для
-                           идентификации.
-
-            session (AsyncSession): Асинхронная сессия для работы с БД.
+            token: User access token for identification.
+            session: Async session for DB operations.
         """
-        user_id: int = await TokenManager.decode_token(
+        user_id: int = await self.tokenManager.decode_token(
             token.access_token,
         )['sub']
         await RefreshSessionDAO.delete(
