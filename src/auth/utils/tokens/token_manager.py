@@ -37,7 +37,7 @@ class TokenManager:  # noqa: WPS214
         access_token_expire_seconds: int,
         algorithm_name: str,
         secret_key: str,
-        verification_key: Optional[str],
+        verification_key: Optional[str] = None,
     ):
         """
         Инициализация класса TokenFacade.
