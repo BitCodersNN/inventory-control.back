@@ -7,34 +7,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-_YAML_FILE_PATH: Final = os.environ.get(
+YAML_FILE_PATH: Final = os.environ.get(
     'FILE_WITH_JWT_KEY',
     default='src/auth/configs/jwt_key.yaml',
 )
 
-
-#  TODO Вынести в класс (https://stackoverflow.com/questions/74127537/python-simple-lazy-loading)
-def _load_keys():
-    with open(_YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
-        return yaml.safe_load(file)
-
-
-_keys: Optional[bytes] = None
-
-
-def _get_keys():
-    global _keys
-    if _keys is None:
-        _keys = _load_keys()
-    return _keys
-
+try:
+    with open(YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
+        _keys = yaml.safe_load(file)
+except FileNotFoundError:
+    _keys = {}
 
 _ACCESS_TOKEN_EXPIRE_MINUTES: Final = 5
 _REFRESH_TOKEN_EXPIRE_DAYS: Final = 30
 
 
-_PUBLIC_KEY_VALUE: Final = _get_keys().get('public_key')
-_SECRET_KEY_VALUE: Final = _get_keys().get('secret_key')
+_PUBLIC_KEY_VALUE: Final = _keys.get('public_key')
+_SECRET_KEY_VALUE: Final = _keys.get('secret_key')
 
 MAX_TOKEN_COUNT: Final = os.environ.get(
     'MAX_TOKEN_COUNT',
@@ -65,10 +54,10 @@ REFRESH_TOKEN_EXPIRE_SECONDS: Final = int(
 ) * 24 * 60
 
 PUBLIC_KEY: Final[Optional[str]] = (
-    base64.b64encode(_PUBLIC_KEY_VALUE.encode()).decode('utf-8')
+    base64.b64encode(_PUBLIC_KEY_VALUE).decode('utf-8')
     if _PUBLIC_KEY_VALUE is not None else None
 )
 SECRET_KEY: Final[Optional[str]] = (
-    base64.b64encode(_SECRET_KEY_VALUE.encode()).decode('utf-8')
+    base64.b64encode(_SECRET_KEY_VALUE).decode('utf-8')
     if _SECRET_KEY_VALUE is not None else None
 )

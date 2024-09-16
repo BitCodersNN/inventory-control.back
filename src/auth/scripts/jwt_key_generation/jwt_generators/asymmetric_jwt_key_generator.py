@@ -1,50 +1,40 @@
-from cryptography.hazmat.backends import default_backend
+import abc
+
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 
 from .jwt_key_generator import IJWTKeyGenerator
 
 
-#  TODO AsymmetricJWTKeyGenerator должен быть абстракным классом, т.к. от типа алгоритма зависит private_key
-class AsymmetricJWTKeyGenerator(IJWTKeyGenerator):
+class IAsymmetricJWTKeyGenerator(IJWTKeyGenerator, abc.ABC):
     """
-    Генератор асимметричных ключей JWT.
+    Абстрактный базовый класс для генераторов асимметричных ключей JWT.
 
-    Этот класс реализует интерфейс IJWTKeyGenerator
-    для генерации асимметричных ключей JWT.
+    Этот класс расширяет интерфейс IJWTKeyGenerator
+    и предоставляет абстрактный метод для генерации закрытого ключа,
+    а также метод для генерации пары ключей (закрытый и публичный).
     """
 
-    def __init__(
-        self,
-        public_exponent: int = 65537,
-        key_size: int = 2048,
-    ):
+    @abc.abstractmethod
+    def _generate_private_key(self):
         """
-        Инициализирует генератор асимметричных ключей JWT.
-
-        Args:
-            public_exponent (int): Публичная экспонента для генерации ключей.
-            По умолчанию: 65537.
-            key_size (int): Размер ключа в битах.
-            По умолчанию: 2048.
-        """
-        self.public_exponent = public_exponent
-        self.key_size = key_size
-
-    def generate_keys(self) -> dict[str, bytes]:
-        """
-        Генерирует асимметричные ключи JWT.
+        Абстрактный метод для генерации закрытого ключа.
 
         Returns:
-            dict[str, bytes]: Словарь, содержащий приватный ключ 'secret_key'
-            и публичный ключ 'public_key' в формате PEM.
+            RSAPrivateKey: Сгенерированный закрытый ключ.
         """
-        private_key = rsa.generate_private_key(
-            public_exponent=self.public_exponent,
-            key_size=self.key_size,
-            backend=default_backend(),
-        )
 
+    def _generate_key(self, private_key) -> dict[str, bytes]:
+        """
+        Генерирует пару ключей (закрытый и публичный) на основе закрытого ключа.
+
+        Args:
+            private_key: Закрытый ключ, сгенерированный
+                методом _generate_private_key.
+
+        Returns:
+            dict[str, bytes]: Словарь, содержащий закрытый
+                и публичный ключи в формате PEM.
+        """
         private_pem = private_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,

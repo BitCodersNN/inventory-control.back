@@ -15,5 +15,5 @@ class IJWTKeyGenerator(abc.ABC):
 
         Returns:
             dict[str, bytes]: Словарь, содержащий ключи JWT
-            и их значения в виде байтов.
+                и их значения в виде байтов.
         """

@@ -2,7 +2,7 @@ import yaml
 
 
 def save_jwt_keys_to_file(
-    filename: str = 'src/auth/configs/jwt_key.yaml',
+    filename: str,
     **kwargs: dict[str, bytes],
 ):
     """
@@ -10,9 +10,9 @@ def save_jwt_keys_to_file(
 
     Args:
         filename (str): Путь к файлу, в который будут сохранены ключи.
-        По умолчанию: 'src/auth/configs/jwt_key.yaml'.
+            По умолчанию: 'src/auth/configs/jwt_key.yaml'.
         kwargs (dict[str, bytes]): Словарь, содержащий ключи JWT
-        и их значения в виде байтов.
+            и их значения в виде байтов.
     """
     with open(filename, 'w') as file:  # noqa: WPS110
         yaml.dump(kwargs, file, default_flow_style=False)

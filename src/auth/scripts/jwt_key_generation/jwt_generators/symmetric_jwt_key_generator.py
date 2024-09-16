@@ -17,7 +17,7 @@ class SymmetricJWTKeyGenerator(IJWTKeyGenerator):
 
         Args:
             key_length (int): Длина генерируемого ключа в байтах.
-            По умолчанию: 32.
+                По умолчанию: 32.
         """
         self.key_length = key_length
 
@@ -27,6 +27,6 @@ class SymmetricJWTKeyGenerator(IJWTKeyGenerator):
 
         Returns:
             dict[str, bytes]: Словарь, содержащий один ключ 'secret_key'
-            и его значение в виде байтов.
+                и его значение в виде байтов.
         """
         return {'secret_key': os.urandom(self.key_length)}

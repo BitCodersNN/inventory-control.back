@@ -1,3 +1,8 @@
+from src.auth.configs.token_config import (
+    TOKEN_ALGORITHM_NAME,
+    TOKEN_ALGORITHM_TYPE,
+    YAML_FILE_PATH,
+)
 from src.configs.logger_settings import logger
 
 from .jwt_generators.jwt_key_generator import IJWTKeyGenerator
@@ -6,9 +11,12 @@ from .jwt_key_storage import save_jwt_keys_to_file
 
 
 def _generate_and_save_keys():
-    generator: IJWTKeyGenerator = create_generator()
+    generator: IJWTKeyGenerator = create_generator(
+        TOKEN_ALGORITHM_TYPE,
+        TOKEN_ALGORITHM_NAME,
+    )
     keys: dict[str, bytes] = generator.generate_keys()
-    save_jwt_keys_to_file(**keys)
+    save_jwt_keys_to_file(YAML_FILE_PATH, **keys)
 
 
 def _main():
