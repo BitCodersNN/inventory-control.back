@@ -1,15 +1,74 @@
+import base64
 import os
-from typing import Final
+from typing import Final, Optional
 
+import yaml
 from dotenv import load_dotenv
 
 load_dotenv()
 
-SECRET_KEY: Final = os.environ.get('SECRET_KEY')
-TOKEN_ALG: Final = os.environ.get('TOKEN_ALG')
-ACCESS_TOKEN_EXPIRE_SECONDS: Final = (
-    int(os.environ.get('ACCESS_TOKEN_EXPIRE_MINUTES')) * 60
+_YAML_FILE_PATH: Final = os.environ.get(
+    'FILE_WITH_JWT_KEY',
+    default='src/auth/configs/jwt_key.yaml',
 )
-REFRESH_TOKEN_EXPIRE_SECONDS: Final = (
-    int(os.environ.get('REFRESH_TOKEN_EXPIRE_DAYS')) * 24 * 60
+
+
+#  TODO Вынести в класс (https://stackoverflow.com/questions/74127537/python-simple-lazy-loading)
+def _load_keys():
+    with open(_YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
+        return yaml.safe_load(file)
+
+
+_keys: Optional[bytes] = None
+
+
+def _get_keys():
+    global _keys
+    if _keys is None:
+        _keys = _load_keys()
+    return _keys
+
+
+_ACCESS_TOKEN_EXPIRE_MINUTES: Final = 5
+_REFRESH_TOKEN_EXPIRE_DAYS: Final = 30
+
+
+_PUBLIC_KEY_VALUE: Final = _get_keys().get('public_key')
+_SECRET_KEY_VALUE: Final = _get_keys().get('secret_key')
+
+MAX_TOKEN_COUNT: Final = os.environ.get(
+    'MAX_TOKEN_COUNT',
+    default=5,
+)
+
+TOKEN_ALGORITHM_TYPE: Final = os.environ.get(
+    'TOKEN_ALGORITHM_TYPE',
+    default='asymmetric',
+)
+TOKEN_ALGORITHM_NAME: Final = os.environ.get(
+    'TOKEN_ALGORITHM_NAME',
+    default='RS256',
+)
+
+ACCESS_TOKEN_EXPIRE_SECONDS: Final = int(
+    os.environ.get(
+        'ACCESS_TOKEN_EXPIRE_MINUTES',
+        default=_ACCESS_TOKEN_EXPIRE_MINUTES,
+    ),
+) * 60
+
+REFRESH_TOKEN_EXPIRE_SECONDS: Final = int(
+    os.environ.get(
+        'REFRESH_TOKEN_EXPIRE_DAYS',
+        default=_REFRESH_TOKEN_EXPIRE_DAYS,
+    ),
+) * 24 * 60
+
+PUBLIC_KEY: Final[Optional[str]] = (
+    base64.b64encode(_PUBLIC_KEY_VALUE.encode()).decode('utf-8')
+    if _PUBLIC_KEY_VALUE is not None else None
+)
+SECRET_KEY: Final[Optional[str]] = (
+    base64.b64encode(_SECRET_KEY_VALUE.encode()).decode('utf-8')
+    if _SECRET_KEY_VALUE is not None else None
 )

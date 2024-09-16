@@ -5,6 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from .jwt_key_generator import IJWTKeyGenerator
 
 
+#  TODO AsymmetricJWTKeyGenerator должен быть абстракным классом, т.к. от типа алгоритма зависит private_key
 class AsymmetricJWTKeyGenerator(IJWTKeyGenerator):
     """
     Генератор асимметричных ключей JWT.
