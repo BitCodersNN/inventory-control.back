@@ -25,22 +25,41 @@ from src.configs.token_config import (
 
 class AuthService:
     """
-    User authentication service.
+    Сервис аутентификации пользователей.
 
     Methods:
-        authenticate: Validates user credentials and returns tokens.
-        identification: Decorator for token validation.
-        refresh: Creates a new access token for a user.
-        logout: Removes the refresh token for a user.
-        logout_from_all_devices: Removes all refresh tokens for a user.
+        authenticate: Проверяет учетные данные пользователя и возвращает токены.
+        identification: Декоратор для проверки валидности токена.
+        refresh: Создает новый access token для пользователя.
+        logout: Удаляет refresh token для пользователя.
+        logout_from_all_devices: Удаляет все refresh token для пользователя.
     """
 
-    def __init__(self, token_manager: TokenManager) -> None:
+    def __init__(self) -> None:
         """Инициализация класса TokenFacade."""
         self.token_manager = TokenManager(
             ACCESS_TOKEN_EXPIRE_SECONDS,
             TOKEN_ALG,
             SECRET_KEY,
+            None,
+        )
+
+    @classmethod
+    async def logout(
+        cls,
+        session: AsyncSession,
+        token: Token,
+    ):
+        """
+        Удаляет refresh token для пользователя.
+
+        Args:
+            session: Асинхронная сессия для операций с БД.
+            token: Access token пользователя.
+        """
+        await RefreshSessionDAO.delete(
+            session,
+            RefreshSessionModel.refresh_token == token.refresh_token,
             None,
         )
 
@@ -50,26 +69,25 @@ class AuthService:
         user_auth: UserAuth,
     ) -> Optional[Token]:
         """
-        Validates user credentials and generates tokens.
+        Проверяет учетные данные пользователя и генерирует токены.
 
         Args:
-            session: Async session for DB operations.
-            user_auth: User credentials (login and password).
+            session: Асинхронная сессия для операций с БД.
+            user_auth: Учетные данные пользователя (логин и пароль).
 
         Returns:
-            Optional[Token]: Token object with access and
-                                    refresh tokens or None.
+            Optional[Token]: Объект Token с access и refresh токенами или None.
         """
         user: Optional[UserModel] = await UserDAO.find_one_or_none(
             session,
             UserModel.login == user_auth.login,
         )
 
-        if user is None:  # Check if user exists
+        if user is None:  # Проверка наличия пользователя
             return None
 
         if not PasswordManager().compare(user_auth.password, user.pass_hash):
-            return None  # Invalid password
+            return None  # Неверный пароль
 
         token: Token = self.token_manager.create_token(user.user_id)
         await RefreshSessionDAO.add(
@@ -87,22 +105,22 @@ class AuthService:
         func: Callable,
     ) -> Callable:
         """
-        Decorator to check access token validity.
+        Декоратор для проверки валидности access token.
 
         Args:
-            func: Function to decorate.
+            func: Функция для декорирования.
 
         Returns:
-            Callable: Wrapped function with token validation.
+            Callable: Обернутая функция с проверкой токена.
         """
 
         @wraps(func)
         def ind_decorate(*args, **kwargs):  # noqa: WPS430
             access_token = kwargs.get('access_token')
             if not access_token:
-                raise KeyError('access_token is missing in kwargs')
+                raise KeyError('access_token отсутствует в kwargs')
             if not isinstance(access_token, str):
-                raise ValueError('access_token must be a string')
+                raise ValueError('access_token должен быть строкой')
             return self._verify_token(access_token)
 
         return ind_decorate
@@ -113,14 +131,14 @@ class AuthService:
         token: Token,
     ) -> Optional[Token]:
         """
-        Creates a new access token for a user.
+        Создает новый access token для пользователя.
 
         Args:
-            session: Async session for DB operations.
-            token: Token to validate for creating a new access token.
+            session: Асинхронная сессия для операций с БД.
+            token: Токен для проверки и создания нового access token.
 
         Returns:
-            Optional[Token]: New Token object or None if invalid.
+            Optional[Token]: Новый объект Token или None, если невалидный.
         """
         user_id: UUID = await self.token_manager.decode_token(
             token.access_token,
@@ -156,11 +174,11 @@ class AuthService:
         session: AsyncSession,
     ):
         """
-        Removes all refresh tokens for a user.
+        Удаляет все refresh token для пользователя.
 
         Args:
-            token: User access token for identification.
-            session: Async session for DB operations.
+            token: Access token пользователя для идентификации.
+            session: Асинхронная сессия для операций с БД.
         """
         user_id: int = await self.token_manager.decode_token(
             token.access_token,
@@ -175,12 +193,12 @@ class AuthService:
         access_token: str,
     ) -> bool:
         """
-        Checks if the access token is valid.
+        Проверяет валидность access token.
 
         Args:
-            access_token: Token to validate.
+            access_token: Токен для проверки.
 
         Returns:
-            bool: True if valid, False otherwise.
+            bool: True, если валидный, иначе False.
         """
         return self.token_manager.decode_token(access_token) is not None
