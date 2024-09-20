@@ -35,13 +35,13 @@ class AuthService:
         logout_from_all_devices: Removes all refresh tokens for a user.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, token_manager: TokenManager) -> None:
         """Инициализация класса TokenFacade."""
         self.token_manager = TokenManager(
             ACCESS_TOKEN_EXPIRE_SECONDS,
             TOKEN_ALG,
             SECRET_KEY,
-            None
+            None,
         )
 
     async def authenticate(
