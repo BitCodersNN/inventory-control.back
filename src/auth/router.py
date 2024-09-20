@@ -25,7 +25,7 @@ def authenticate(
         auth_user: Данные пользователя для аутентификации.
 
     Returns:
-        Результат аутентификации.
+        Результат аутентификаци.
     """
     return auth_service.authenticate(async_session, auth_user)
 
@@ -50,8 +50,8 @@ def logout(
     return auth_service.logout(async_session, token)
 
 
-@router.get('/logout_from_all_devices')
-def logout_from_all_devices(
+@router.get('/abort ')
+def abort(
     refresh_token: UUID,
     access_token: str = oauth2_scheme,
 ):
