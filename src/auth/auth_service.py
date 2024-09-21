@@ -1,18 +1,14 @@
 from functools import wraps
+from inspect import signature
 from typing import Callable, Optional
-from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from src.auth.dao.refresh_session import RefreshSessionDAO
-from src.auth.dao.user import UserDAO
-from src.auth.models import RefreshSessionModel, UserModel
-from src.auth.schemas.refresh_session import (
-    RefreshSessionCreate,
-    RefreshSessionUpdate,
-)
-from src.auth.schemas.token import Token
+from src.auth.schemas.tokens import AccessToken, RefreshToken, Tokens
 from src.auth.schemas.user import UserAuth
+from src.auth.services import (
+    AuthenticateService,
+    LogoutService,
+    RefreshService,
+)
 from src.auth.utils.password_manager import PasswordManager
 from src.auth.utils.tokens.token_manager import TokenManager
 from src.configs.token_config import (
@@ -21,184 +17,180 @@ from src.configs.token_config import (
     SECRET_KEY,
     TOKEN_ALG,
 )
+from src.utils.database_session import get_async_session
 
 
 class AuthService:
     """
-    Сервис аутентификации пользователей.
+    Сервис аутентификации и управления токенами.
 
-    Methods:
-        authenticate: Проверяет учетные данные пользователя и возвращает токены.
-        identification: Декоратор для проверки валидности токена.
-        refresh: Создает новый access token для пользователя.
-        logout: Удаляет refresh token для пользователя.
-        logout_from_all_devices: Удаляет все refresh token для пользователя.
+    Этот класс предоставляет методы для аутентификации пользователей,
+    управления токенами доступа и обновления,
+    а также для выхода из системы.
+
+    Attributes:
+        _token_manager: Менеджер токенов для правления, доступа и обновления.
+        _password_manager: Менеджер паролей для проверки и хеширования паролей.
+        _authenticate_service: Сервис аутентификации.
+        _logout_service: Сервис выхода из системы.
+        _refresh_service: Сервис обновления токенов.
+
     """
 
     def __init__(self) -> None:
-        """Инициализация класса TokenFacade."""
-        self.token_manager = TokenManager(
+        """
+        Инициализирует экземпляр AuthService.
+
+        Устанавливает менеджеры токенов и паролей, а также
+               сервисы аутентификации, выхода и обновления.
+        """
+        self._token_manager = TokenManager(
             ACCESS_TOKEN_EXPIRE_SECONDS,
             TOKEN_ALG,
             SECRET_KEY,
             None,
         )
 
-    @classmethod
-    async def logout(
-        cls,
-        session: AsyncSession,
-        token: Token,
-    ):
-        """
-        Удаляет refresh token для пользователя.
+        self._password_manager = PasswordManager()
 
-        Args:
-            session: Асинхронная сессия для операций с БД.
-            token: Access token пользователя.
-        """
-        await RefreshSessionDAO.delete(
-            session,
-            RefreshSessionModel.refresh_token == token.refresh_token,
-            None,
+        self._authenticate_service = AuthenticateService(
+            self._token_manager,
+            self._password_manager,
+            REFRESH_TOKEN_EXPIRE_SECONDS,
+        )
+
+        self._logout_service = LogoutService(
+            self._token_manager,
+        )
+
+        self._refresh_service = RefreshService(
+            self._token_manager,
         )
 
     async def authenticate(
         self,
-        session: AsyncSession,
         user_auth: UserAuth,
-    ) -> Optional[Token]:
+    ) -> Optional[Tokens]:
         """
-        Проверяет учетные данные пользователя и генерирует токены.
+        Аутентифицирует пользователя и возвращает токены доступа и обновления.
 
         Args:
-            session: Асинхронная сессия для операций с БД.
-            user_auth: Учетные данные пользователя (логин и пароль).
+            user_auth (UserAuth): Данные аутентификации пользователя.
 
         Returns:
-            Optional[Token]: Объект Token с access и refresh токенами или None.
+            Optional[Tokens]: Токены доступа и обновления,
+                если аутентификация прошла успешно, иначе None.
         """
-        user: Optional[UserModel] = await UserDAO.find_one_or_none(
-            session,
-            UserModel.login == user_auth.login,
+        return await self._session_connect(
+            self._authenticate_service.authenticate,
+            user_auth,
         )
 
-        if user is None:  # Проверка наличия пользователя
-            return None
+    async def logout(
+        self,
+        refresh_token: RefreshToken,
+    ) -> Optional[Tokens]:
+        """
+        Выполняет выход пользователя из системы.
 
-        if not PasswordManager().compare(user_auth.password, user.pass_hash):
-            return None  # Неверный пароль
+        Args:
+            refresh_token (RefreshToken): Токен обновления
+                                    для выхода из системы.
 
-        token: Token = self.token_manager.create_token(user.user_id)
-        await RefreshSessionDAO.add(
-            session,
-            RefreshSessionCreate(
-                refresh_token=token.refresh_token,
-                expires_in=REFRESH_TOKEN_EXPIRE_SECONDS,
-                user_id=user.user_id,
-            ),
+        Returns:
+            Optional[Tokens]: Токены доступа и обновления,
+                    если выход прошел успешно, иначе None.
+        """
+        return await self._session_connect(
+            self._logout_service.logout,
+            refresh_token,
         )
-        return token
+
+    async def logout_from_all_devices(
+        self,
+        access_token: AccessToken,
+    ) -> Optional[Tokens]:
+        """
+        Выполняет выход пользователя из системы со всех устройств.
+
+        Args:
+            access_token (AccessToken): Токен доступа для
+                                выхода со всех устройств.
+
+        Returns:
+            Optional[Tokens]: Токены доступа и обновления,
+                    если выход прошел успешно, иначе None.
+        """
+        return await self._session_connect(
+            self._logout_service.logout_from_all_devices,
+            access_token,
+        )
+
+    async def refresh(
+        self,
+        refresh_token: RefreshToken,
+    ) -> Optional[Tokens]:
+        """
+        Обновляет токены доступа и обновления, используя токен обновления.
+
+        Args:
+            refresh_token (RefreshToken): Токен обновления
+                                    для обновления токенов.
+
+        Returns:
+            Optional[Tokens]: Новые токены доступа и обновления,
+                    если обновление прошло успешно, иначе None.
+        """
+        return await self._session_connect(
+            self._refresh_service.refresh,
+            refresh_token,
+        )
 
     def identification(
         self,
         func: Callable,
     ) -> Callable:
         """
-        Декоратор для проверки валидности access token.
+        Декоратор для идентификации пользователя по токену доступа.
 
         Args:
-            func: Функция для декорирования.
+            func (Callable): Функция, которую нужно декорировать.
 
         Returns:
-            Callable: Обернутая функция с проверкой токена.
-        """
+            Callable: Декорированная функция.
 
+        Raises:
+            KeyError: Если токен доступа отсутствует в kwargs.
+        """
         @wraps(func)
         def ind_decorate(*args, **kwargs):  # noqa: WPS430
-            access_token = kwargs.get('access_token')
-            if not access_token:
-                raise KeyError('access_token отсутствует в kwargs')
-            if not isinstance(access_token, str):
-                raise ValueError('access_token должен быть строкой')
-            return self._verify_token(access_token)
+            arg_name: str = 'access_token'
+            func_args: dict = dict(signature(func).parameters)
 
+            if arg_name not in func_args:
+                raise KeyError('access_token отсутствует в kwargs')
+
+            args_position: int = list(func_args.keys()).index(arg_name)
+            access_token: str = args[args_position]
+            self._token_manager.decode_token(access_token)
+
+            return func(*args, **kwargs)
         return ind_decorate
 
-    async def refresh(
-        self,
-        session: AsyncSession,
-        token: Token,
-    ) -> Optional[Token]:
+    @classmethod
+    async def _session_connect(cls, func: Callable, *args, **kwargs):
         """
-        Создает новый access token для пользователя.
+         Выполняет функцию в а синхронной сессией базы данных.
 
         Args:
-            session: Асинхронная сессия для операций с БД.
-            token: Токен для проверки и создания нового access token.
+            func (Callable): Функция, выполняемая в контексте сессии.
+            args: Аргументы для переданной функции.
+            kwargs: Ключевые аргументы для переданной функции.
 
         Returns:
-            Optional[Token]: Новый объект Token или None, если невалидный.
+            Any: Результат выполнения переданной функции.
         """
-        user_id: UUID = await self.token_manager.decode_token(
-            token.access_token,
-        )['sub']
-        user: Optional[UserModel] = await UserDAO.find_one_or_none(
-            session,
-            UserModel.user_id == user_id,
-        )
-        if user is None:
-            return None
-
-        refresh_session: Optional[RefreshSessionModel]
-        refresh_session = await RefreshSessionDAO.find_one_or_none(
-            session,
-            RefreshSessionModel.refresh_token == token.refresh_token,
-        )
-        if refresh_session is None:
-            return None
-
-        token: Token = self.token_manager.create_token(user_id)
-        await RefreshSessionDAO.update(
-            session,
-            RefreshSessionModel.token_id == refresh_session.token_id,
-            obj_in=RefreshSessionUpdate(
-                refresh_token=token.refresh_token,
-            ),
-        )
-        return token
-
-    async def logout_from_all_devices(
-        self,
-        token: Token,
-        session: AsyncSession,
-    ):
-        """
-        Удаляет все refresh token для пользователя.
-
-        Args:
-            token: Access token пользователя для идентификации.
-            session: Асинхронная сессия для операций с БД.
-        """
-        user_id: int = await self.token_manager.decode_token(
-            token.access_token,
-        )['sub']
-        await RefreshSessionDAO.delete(
-            session,
-            RefreshSessionModel.user_id == user_id,
-        )
-
-    def _verify_token(
-        self,
-        access_token: str,
-    ) -> bool:
-        """
-        Проверяет валидность access token.
-
-        Args:
-            access_token: Токен для проверки.
-
-        Returns:
-            bool: True, если валидный, иначе False.
-        """
-        return self.token_manager.decode_token(access_token) is not None
+        async with get_async_session() as session:
+            func_result = await func(session, *args, **kwargs)
+            await session.commit()
+        return func_result

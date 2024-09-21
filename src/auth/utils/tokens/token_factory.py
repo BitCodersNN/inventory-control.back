@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 
-from src.auth.schemas.token import Token
+from src.auth.schemas.tokens import Tokens
 
 
 class TokenFactory:
@@ -69,7 +69,7 @@ class TokenFactory:
     def create_token(
         self,
         user_id: uuid.UUID,
-    ) -> Token:
+    ) -> Tokens:
         """
         Создает и возвращает токены доступа и обновления для пользователя.
 
@@ -78,14 +78,14 @@ class TokenFactory:
             токен подтверждения доступа.
 
         Returns:
-            Token: Объект Token, содержащий токены доступа и обновления.
+            Tokens: Объект Token, содержащий токены доступа и обновления.
         """
         access_token = self._create_access_token(
             user_id=user_id,
         )
         refresh_token = self._create_refresh_token()
 
-        return Token(
+        return Tokens(
             access_token=access_token,
             refresh_token=refresh_token,
         )

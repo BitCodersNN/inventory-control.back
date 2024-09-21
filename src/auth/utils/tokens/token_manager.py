@@ -2,7 +2,7 @@ import uuid
 from typing import Optional
 
 from src.auth.models import RefreshSessionModel
-from src.auth.schemas.token import Token
+from src.auth.schemas.tokens import Tokens
 from src.auth.utils.tokens.access_token_decoder import AccessTokenDecoder
 from src.auth.utils.tokens.refresh_session_validator import (
     RefreshSessionValidator,
@@ -114,7 +114,7 @@ class TokenManager:  # noqa: WPS214
             raise ValueError('Ключ проверки должен быть строкой')
         self._access_token_decoder.verification_key = verification_key
 
-    def create_token(self, user_id: uuid.UUID) -> Token:
+    def create_token(self, user_id: uuid.UUID) -> Tokens:
         """
         Создает токены доступа и обновления для указанного пользователя.
 
@@ -122,7 +122,7 @@ class TokenManager:  # noqa: WPS214
             user_id (uuid.UUID): ID пользователя, для которого создаются токены.
 
         Returns:
-            Token: Объект, содержащий токены доступа и обновления.
+            Tokens: Объект, содержащий токены доступа и обновления.
         """
         return self._token_factory.create_token(user_id)
 
@@ -130,7 +130,7 @@ class TokenManager:  # noqa: WPS214
         self,
         refresh_session: RefreshSessionModel,
         user_id: uuid.UUID,
-    ) -> Token:
+    ) -> Tokens:
         """
         Обновляет токены доступа и обновления.
 
@@ -140,7 +140,7 @@ class TokenManager:  # noqa: WPS214
             токены.
 
         Returns:
-            Token: Объект, содержащий новые токены доступа и обновления.
+            Tokens: Объект, содержащий новые токены доступа и обновления.
         """
         self._refresh_session_validator.verify_refresh_session(
             refresh_session,
