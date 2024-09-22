@@ -22,8 +22,8 @@ _ACCESS_TOKEN_EXPIRE_MINUTES: Final = 5
 _REFRESH_TOKEN_EXPIRE_DAYS: Final = 30
 
 
-_PUBLIC_KEY_VALUE: Final = _keys.get('public_key')
-_SECRET_KEY_VALUE: Final = _keys.get('secret_key')
+PUBLIC_KEY: Final[Optional[bytes]] = _keys.get('public_key')
+SECRET_KEY: Final[Optional[bytes]] = _keys.get('secret_key')
 
 MAX_TOKEN_COUNT: Final = os.environ.get(
     'MAX_TOKEN_COUNT',
@@ -52,12 +52,3 @@ REFRESH_TOKEN_EXPIRE_SECONDS: Final = int(
         default=_REFRESH_TOKEN_EXPIRE_DAYS,
     ),
 ) * 24 * 60
-
-PUBLIC_KEY: Final[Optional[str]] = (
-    base64.b64encode(_PUBLIC_KEY_VALUE).decode('utf-8')
-    if _PUBLIC_KEY_VALUE is not None else None
-)
-SECRET_KEY: Final[Optional[str]] = (
-    base64.b64encode(_SECRET_KEY_VALUE).decode('utf-8')
-    if _SECRET_KEY_VALUE is not None else None
-)
