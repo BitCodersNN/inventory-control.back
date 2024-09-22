@@ -24,6 +24,7 @@ cryptography = "^43.0.1"
 pytest = "^8.3.3"
 pytest-cov = "^5.0.0"
 pytest-asyncio = "^0.24.0"
+cryptography = "^43.0.1"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
@@ -32,6 +33,7 @@ isort = "^5.13.2"
 
 [tool.poetry.scripts]
 app = "src.__main__:main"
+jwt_key_generation = "src.auth.scripts.jwt_key_generation.__main__:_main"
 jwt_key_generation = "src.auth.scripts.jwt_key_generation.__main__:_main"
 
 [build-system]
