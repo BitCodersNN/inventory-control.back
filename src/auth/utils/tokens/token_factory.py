@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 
-from src.auth.schemas.token import Token
+from src.auth.schemas.tokens import Tokens
 
 
 class TokenFactory:
@@ -49,7 +49,7 @@ class TokenFactory:
         Returns:
             str: Текущий секретный ключ.
         """
-        return self.secret_key
+        return self._secret_key
 
     @secret_key.setter
     def secret_key(self, secret_key: str):
@@ -64,12 +64,12 @@ class TokenFactory:
         """
         if not isinstance(secret_key, str):
             raise ValueError('Секретный ключ должен быть строкой')
-        self.secret_key = secret_key
+        self._secret_key = secret_key
 
     def create_token(
         self,
         user_id: uuid.UUID,
-    ) -> Token:
+    ) -> Tokens:
         """
         Создает и возвращает токены доступа и обновления для пользователя.
 
@@ -78,14 +78,14 @@ class TokenFactory:
             токен подтверждения доступа.
 
         Returns:
-            Token: Объект Token, содержащий токены доступа и обновления.
+            Tokens: Объект Token, содержащий токены доступа и обновления.
         """
         access_token = self._create_access_token(
             user_id=user_id,
         )
         refresh_token = self._create_refresh_token()
 
-        return Token(
+        return Tokens(
             access_token=access_token,
             refresh_token=refresh_token,
         )
@@ -108,7 +108,7 @@ class TokenFactory:
         exp = timedelta(seconds=self._access_token_expire_seconds)
         exp += created_at
         token_data: dict = {
-            'sub': user_id,
+            'sub': str(user_id),
             'iat': created_at,
             'exp': exp,
         }

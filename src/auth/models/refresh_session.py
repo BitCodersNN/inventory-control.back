@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql.expression import false
 
-from src.auth.utils.constants import MAX_TOKEN_COUNT
+from src.auth.configs.token_config import MAX_TOKEN_COUNT
 from src.auth.utils.exceptions import TokenLimitExceededError
 from src.configs.logger_settings import logger
 from src.utils.database_session import BASE
