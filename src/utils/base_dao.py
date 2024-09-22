@@ -186,13 +186,6 @@ class BaseDAO(   # noqa: WPS214
             values(**create_data).
             returning(cls.model)
         )
-        print(create_data)
-        print(create_data)
-        print(create_data)
-        print(query)
-        print(query)
-        print(query)
-        print("CREAM_PIE")
         try:
             # query_result = await execute_query(session, query)
             query_result = await session.execute(query)
