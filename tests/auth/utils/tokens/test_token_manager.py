@@ -10,6 +10,7 @@ from src.auth.configs.token_config import (
     SECRET_KEY,
     TOKEN_ALGORITHM_NAME,
 )
+from src.auth.schemas.tokens import Tokens
 from uuid import UUID,uuid4
 
 
@@ -117,10 +118,19 @@ class TestTokenManager:
             (
                 uuid4(),
             ),
+            (
+                uuid4(),
+            ),
+            (
+                uuid4(),
+            ),
         ]
     )
     def test_create_token(self, user_id: UUID):
         token_manager: TokenManager = self._TokenManager()
-        token_manager.create_token(user_id)
-        # print(f'ANSWER_FOR: {user_id}')
-        # print(token_manager.create_token(user_id))
+        tokens : Tokens = token_manager.create_token(user_id)
+        dec_tokens: dict = token_manager.decode_token(
+            tokens.access_token
+        )
+        dec_tokens['sub'] == user_id
+        

@@ -1,5 +1,5 @@
 from jose import jwt
-
+from uuid import UUID
 from src.auth.utils.constants import LABELS_FOR_LOGGER
 from src.auth.utils.exceptions import (
     InvalidAccessTokenError,
@@ -86,6 +86,7 @@ class AccessTokenDecoder:
                 self._verification_key,
                 algorithms=self._algorithm_name,
             )
+            decoded_payload['sub'] = UUID(decoded_payload['sub'])
         except jwt.ExpiredSignatureError:
             logger.info(
                 (
