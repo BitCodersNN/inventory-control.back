@@ -2,6 +2,13 @@ from functools import wraps
 from inspect import signature
 from typing import Callable, Optional
 
+from src.auth.configs.token_config import (
+    ACCESS_TOKEN_EXPIRE_SECONDS,
+    PUBLIC_KEY,
+    REFRESH_TOKEN_EXPIRE_SECONDS,
+    SECRET_KEY,
+    TOKEN_ALGORITHM_NAME,
+)
 from src.auth.schemas.tokens import AccessToken, RefreshToken, Tokens
 from src.auth.schemas.user import UserAuth
 from src.auth.services import (
@@ -11,16 +18,10 @@ from src.auth.services import (
 )
 from src.auth.utils.password_manager import PasswordManager
 from src.auth.utils.tokens.token_manager import TokenManager
-from src.configs.token_config import (
-    ACCESS_TOKEN_EXPIRE_SECONDS,
-    REFRESH_TOKEN_EXPIRE_SECONDS,
-    SECRET_KEY,
-    TOKEN_ALG,
-)
 from src.utils.database_session import get_async_session
 
 
-class AuthService:
+class ServiceAggregator:
     """
     Сервис аутентификации и управления токенами.
 
@@ -46,9 +47,9 @@ class AuthService:
         """
         self._token_manager = TokenManager(
             ACCESS_TOKEN_EXPIRE_SECONDS,
-            TOKEN_ALG,
+            TOKEN_ALGORITHM_NAME,
             SECRET_KEY,
-            None,
+            PUBLIC_KEY,
         )
 
         self._password_manager = PasswordManager()
