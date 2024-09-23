@@ -1,4 +1,4 @@
-name: test
+name: Code Test
 
 on:
   push:
@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,7 +42,8 @@ jobs:
         poetry install
 
     - name: Run tests
-      run: poetry run pytest --config=setup.cfg
+      run: |
+        poetry run pytest --config=setup.cfg
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
