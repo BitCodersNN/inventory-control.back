@@ -38,16 +38,6 @@ class AccessTokenDecoder:
         self._algorithm_name = algorithm_name
 
     @property
-    def algorithm_name(self) -> str:
-        """
-        Возвращает название алгоритма.
-
-        Returns:
-            str: Название алгоритма.
-        """
-        return self._algorithm_name
-
-    @property
     def verification_key(self) -> Union[dict, str]:
         """
         Возвращает текущий ключ проверки.

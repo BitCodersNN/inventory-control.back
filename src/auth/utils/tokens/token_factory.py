@@ -39,16 +39,6 @@ class TokenFactory:
         self._algorithm_name = algorithm_name
 
     @property
-    def algorithm_name(self) -> str:
-        """
-        Возвращает название алгоритма.
-
-        Returns:
-            str: Название алгоритма.
-        """
-        return self._algorithm_name
-
-    @property
     def secret_key(self) -> Union[dict, str]:
         """
         Возвращает текущий секретный ключ.
