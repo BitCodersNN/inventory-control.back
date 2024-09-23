@@ -1,6 +1,8 @@
 import uuid
 from typing import Optional
 
+from jose import jwk
+
 from src.auth.models import RefreshSessionModel
 from src.auth.schemas.token import Token
 from src.auth.utils.tokens.access_token_decoder import AccessTokenDecoder
@@ -36,8 +38,8 @@ class TokenManager:  # noqa: WPS214
         self,
         access_token_expire_seconds: int,
         algorithm_name: str,
-        secret_key: str,
-        verification_key: Optional[str],
+        secret_key: bytes,
+        verification_key: Optional[bytes],
     ):
         """
         Инициализация класса TokenFacade.
@@ -45,13 +47,16 @@ class TokenManager:  # noqa: WPS214
         Args:
             access_token_expire_seconds (int): Время жизни токена доступа в сек.
             algorithm_name (str): Название алгоритма, подписывающего токены.
-            secret_key (str): Секретный ключ, используемый для подписи токенов.
-            verification_key (Optional[str]): Ключ для проверки подписи токенов.
+            secret_key (bytes): Секретный ключ, используемый для подписи токенов.
+            verification_key (Optional[bytes]): Ключ для проверки подписи токенов.
             Если не указан, используется secret_key.
         """
         verification_key = verification_key if (
             verification_key is not None
         ) else secret_key
+
+        secret_key = jwk.construct(secret_key, algorithm_name).to_dict()
+        verification_key = jwk.construct(verification_key, algorithm_name).to_dict()
 
         self._token_factory = TokenFactory(
             access_token_expire_seconds,

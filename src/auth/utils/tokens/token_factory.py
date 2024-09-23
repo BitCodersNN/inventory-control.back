@@ -108,7 +108,7 @@ class TokenFactory:
         exp = timedelta(seconds=self._access_token_expire_seconds)
         exp += created_at
         token_data: dict = {
-            'sub': user_id,
+            'sub': str(user_id),
             'iat': created_at,
             'exp': exp,
         }
