@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timedelta, timezone
+from typing import Union
 
 from jose import jwt
 
@@ -9,11 +10,6 @@ from src.auth.schemas.token import Token
 class TokenFactory:
     """
     Класс для создания токенов доступа и обновления.
-
-    Attributes:
-        _access_token_expire_seconds (int): Время жизни токена доступа в сек.
-        _secret_key (str): Секретный ключ, используемый для подписи токенов.
-        _algorithm_name (str): Название алгоритма, подписывающего токены.
 
     Methods:
         secret_key (property): Возвращает текущий секретный ключ.
@@ -26,7 +22,7 @@ class TokenFactory:
     def __init__(
         self,
         access_token_expire_seconds: int,
-        secret_key: str,
+        secret_key: Union[dict, str],
         algorithm_name: str,
     ):
         """
@@ -34,7 +30,8 @@ class TokenFactory:
 
         Args:
             access_token_expire_seconds (int): Время жизни токена доступа в сек.
-            secret_key (str): Секретный ключ, используемый для подписи токенов.
+            secret_key (Union[dict, str]): Секретный ключ, используемый
+            для подписи токенов.
             algorithm_name (str): Название алгоритма, подписывающего токены.
         """
         self._access_token_expire_seconds = access_token_expire_seconds
@@ -42,29 +39,29 @@ class TokenFactory:
         self._algorithm_name = algorithm_name
 
     @property
-    def secret_key(self) -> str:
+    def secret_key(self) -> Union[dict, str]:
         """
         Возвращает текущий секретный ключ.
 
         Returns:
-            str: Текущий секретный ключ.
+            Union[dict, str]: Текущий секретный ключ.
         """
-        return self.secret_key
+        return self._secret_key
 
     @secret_key.setter
-    def secret_key(self, secret_key: str):
+    def secret_key(self, secret_key: Union[dict, str]):
         """
         Устанавливает новый секретный ключ.
 
         Args:
-            secret_key (str): Новый секретный ключ. Должен быть строкой.
+            secret_key (Union[dict, str]): Новый секретный ключ.
 
         Raises:
-            ValueError: Если переданный ключ не является строкой.
+            ValueError: Если переданный ключ не является строкой или словарём.
         """
-        if not isinstance(secret_key, str):
-            raise ValueError('Секретный ключ должен быть строкой')
-        self.secret_key = secret_key
+        if not isinstance(secret_key, Union[dict, str]):
+            raise ValueError('Секретный ключ должен быть словарем')
+        self._secret_key = secret_key
 
     def create_token(
         self,
@@ -108,7 +105,7 @@ class TokenFactory:
         exp = timedelta(seconds=self._access_token_expire_seconds)
         exp += created_at
         token_data: dict = {
-            'sub': user_id,
+            'sub': str(user_id),
             'iat': created_at,
             'exp': exp,
         }
