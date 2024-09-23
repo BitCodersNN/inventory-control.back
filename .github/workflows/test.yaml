@@ -48,5 +48,4 @@ jobs:
       uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
-        github_checks: false
         token: ${{ secrets.CODECOV_TOKEN }}
