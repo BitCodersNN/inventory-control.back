@@ -104,4 +104,5 @@ class AccessTokenDecoder:
             )
             raise InvalidAccessTokenError
 
+        decoded_payload['sub'] = UUID(decoded_payload['sub'])
         return decoded_payload
