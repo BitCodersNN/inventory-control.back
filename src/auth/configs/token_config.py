@@ -62,7 +62,7 @@ SECRET_KEY: Final[Union[str, dict]] = (
 
 PUBLIC_KEY: Final[Optional[dict]] = (
     jwk.construct(
-        _keys.get('secret_key'),
+        _keys.get('public_key'),
         TOKEN_ALGORITHM_NAME,
     ).to_dict()
 )
