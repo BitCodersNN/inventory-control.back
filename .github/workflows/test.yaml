@@ -20,7 +20,15 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.12']
+    env:
+      SERVER_HOST: 0.0.0.0
+      SERVER_PORT: 0
 
+      POSTGRES_USER: temp
+      POSTGRES_PASSWORD: temp
+      POSTGRES_DB: temp
+      POSTGRES_HOST: temp
+      POSTGRES_PORT: 0
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
