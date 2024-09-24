@@ -68,8 +68,8 @@ class TestAccessTokenDecoder:
                 token_decoder.verification_key = new_verification_key
 
     @pytest.mark.parametrize('user_id, exp_delta', [
-        (1, timedelta(hours=1)),
-        ('dfsfsf', timedelta(hours=2)),
+        (14324, timedelta(hours=1)),
+        (53261, timedelta(hours=2)),
     ])
     def test_decode_token_success(
         self,
@@ -79,13 +79,12 @@ class TestAccessTokenDecoder:
     ):
         algorithm = token_decoder._algorithm_name
         payload = {
-            'user_id': user_id,
+            'sub': str(user_id),
             'exp': datetime.now(timezone.utc) + exp_delta,
         }
         access_token = _create_access_token(algorithm, payload)
-
         decoded_payload = token_decoder.decode_token(access_token)
-        assert decoded_payload['user_id'] == user_id
+        assert int(decoded_payload['sub']) == user_id
 
     @pytest.mark.parametrize('exp_delta', [
         timedelta(seconds=5),
@@ -100,7 +99,7 @@ class TestAccessTokenDecoder:
         algorithm = token_decoder._algorithm_name
         current_time = datetime.now(timezone.utc)
         payload = {
-            'user_id': 1,
+            'sub': 1,
             'exp': current_time + exp_delta,
         }
         access_token = _create_access_token(algorithm, payload)
@@ -115,7 +114,7 @@ class TestAccessTokenDecoder:
     ):
         algorithm = token_decoder._algorithm_name
         payload = {
-            'user_id': 1,
+            'sub': 1,
             'exp': datetime.now(timezone.utc) + timedelta(hours=1),
         }
         access_token = _create_access_token(algorithm, payload)
@@ -139,7 +138,7 @@ class TestAccessTokenDecoder:
     ):
         algorithm = token_decoder._algorithm_name
         payload = {
-            'user_id': 1,
+            'sub': 1,
             'exp': datetime.now(timezone.utc) + timedelta(hours=1),
         }
         access_token = _create_access_token(algorithm, payload)
