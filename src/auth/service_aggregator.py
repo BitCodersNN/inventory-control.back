@@ -3,11 +3,8 @@ from inspect import signature
 from typing import Callable, Optional
 
 from src.auth.configs.token_config import (
-    ACCESS_TOKEN_EXPIRE_SECONDS,
-    PUBLIC_KEY,
     REFRESH_TOKEN_EXPIRE_SECONDS,
-    SECRET_KEY,
-    TOKEN_ALGORITHM_NAME,
+    TOKEN_CONFIG,
 )
 from src.auth.schemas.tokens import AccessToken, RefreshToken, Tokens
 from src.auth.schemas.user import UserAuth
@@ -16,8 +13,9 @@ from src.auth.services import (
     LogoutService,
     RefreshService,
 )
-from src.auth.utils.password_manager import PasswordManager
-from src.auth.utils.tokens.token_manager import TokenManager
+from src.auth.toolkit.password import PasswordToolkit
+from src.auth.toolkit.token import TokenToolkit
+from src.auth.utils.tokens.payload_handler import PayloadHandler
 from src.utils.database_session import get_async_session
 
 
@@ -45,14 +43,12 @@ class ServiceAggregator:
         Устанавливает менеджеры токенов и паролей, а также
                сервисы аутентификации, выхода и обновления.
         """
-        self._token_manager = TokenManager(
-            ACCESS_TOKEN_EXPIRE_SECONDS,
-            TOKEN_ALGORITHM_NAME,
-            SECRET_KEY,
-            PUBLIC_KEY,
+        self._token_manager = TokenToolkit(
+            TOKEN_CONFIG,
+            PayloadHandler,
         )
 
-        self._password_manager = PasswordManager()
+        self._password_manager = PasswordToolkit()
 
         self._authenticate_service = AuthenticateService(
             self._token_manager,

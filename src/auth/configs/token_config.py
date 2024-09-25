@@ -5,6 +5,8 @@ from typing import Final, Optional
 import yaml
 from dotenv import load_dotenv
 
+from src.auth.schemas.tokens import AccessTokenConfig
+
 load_dotenv()
 
 YAML_FILE_PATH: Final = os.environ.get(
@@ -60,4 +62,12 @@ PUBLIC_KEY: Final[Optional[str]] = (
 SECRET_KEY: Final[Optional[str]] = (
     base64.b64encode(_SECRET_KEY_VALUE).decode('utf-8')
     if _SECRET_KEY_VALUE is not None else None
+)
+
+TOKEN_CONFIG: Final = AccessTokenConfig(
+    access_token_expire_seconds=ACCESS_TOKEN_EXPIRE_SECONDS,
+    token_algorithm_name=TOKEN_ALGORITHM_NAME,
+    token_algorithm_type=TOKEN_ALGORITHM_TYPE,
+    verification_key=PUBLIC_KEY,
+    secret_key=SECRET_KEY,
 )

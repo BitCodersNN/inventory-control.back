@@ -1,16 +1,17 @@
 import uuid
-from typing import Optional, Union
+from typing import Type, Union
 
 from src.auth.models import RefreshSessionModel
-from src.auth.schemas.tokens import Tokens
+from src.auth.schemas.tokens import AccessTokenConfig, Tokens
 from src.auth.utils.tokens.access_token_decoder import AccessTokenDecoder
+from src.auth.utils.tokens.payload_handler import PayloadHandler
 from src.auth.utils.tokens.refresh_session_validator import (
     RefreshSessionValidator,
 )
 from src.auth.utils.tokens.token_factory import TokenFactory
 
 
-class TokenManager:  # noqa: WPS214
+class TokenToolkit:  # noqa: WPS214
     """
     Управление токенами доступа и обновления.
 
@@ -34,36 +35,28 @@ class TokenManager:  # noqa: WPS214
 
     def __init__(
         self,
-        access_token_expire_seconds: int,
-        algorithm_name: str,
-        secret_key: Union[dict, str],
-        verification_key: Optional[Union[dict, str]],
+        token_config: AccessTokenConfig,
+        payload_handler: Type[PayloadHandler],
     ):
         """
         Инициализация класса TokenFacade.
 
         Args:
-            access_token_expire_seconds (int): Время жизни токена доступа в сек.
-            algorithm_name (str): Название алгоритма, подписывающего токены.
-            secret_key (Union[dict, str]): Секретный ключ, используемый
-            для подписи токенов.
-            verification_key (Optional[bytes]): Ключ для проверки подписи
-            токенов. Если не указан, используется secret_key.
+            token_config (AccessTokenConfig): Конфигурация токенов доступа.
+            payload_handler (Type[PayloadHandler]): Обработчик полезной
+            нагрузки токена.
         """
-        verification_key = verification_key if (
-            verification_key is not None
-        ) else secret_key
-
         self._token_factory = TokenFactory(
-            access_token_expire_seconds,
-            secret_key,
-            algorithm_name,
+            token_config.access_token_expire_seconds,
+            token_config.secret_key,
+            token_config.algorithm_name,
         )
         self._refresh_session_validator = RefreshSessionValidator()
         self._access_token_decoder = AccessTokenDecoder(
-            verification_key,
-            algorithm_name,
+            token_config.verification_key or token_config.secret_key,
+            token_config.algorithm_name,
         )
+        self._payload_handler = payload_handler
 
     @property
     def secret_key(self) -> Union[dict, str]:
@@ -125,7 +118,8 @@ class TokenManager:  # noqa: WPS214
         Returns:
             Tokens: Объект, содержащий токены доступа и обновления.
         """
-        return self._token_factory.create_token(user_id)
+        payload: dict = self._payload_handler.create_payload(user_id)
+        return self._token_factory.create_token(**payload)
 
     def refresh(
         self,
@@ -163,4 +157,5 @@ class TokenManager:  # noqa: WPS214
             TokenExpiredError: Если срок действия токена истек.
             InvalidAccessTokenError: Если токен недействителен.
         """
-        return self._access_token_decoder.decode_token(access_token)
+        payload: dict = self._access_token_decoder.decode_token(access_token)
+        return self._payload_handler.decode_payload(payload)
