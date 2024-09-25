@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.dao.user import UserDAO
 from src.auth.models import RefreshSessionModel, UserModel
+from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.refresh_session import RefreshSessionUpdate
 from src.auth.schemas.tokens import RefreshToken, Tokens
 from src.auth.utils.exceptions import (
@@ -73,14 +74,15 @@ class RefreshService:
         if user is None:
             raise InvalidCredentialsError
 
-        token: Tokens = self._token_manager.create_token(
-            refresh_session.user_id,
+        payload = AccessTokenPayload(sub=user.user_id)
+        tokens: Tokens = self._token_manager.create_token(
+            payload,
         )
         await RefreshSessionDAO.update(
             session,
             RefreshSessionModel.token_id == refresh_session.token_id,
             obj_in=RefreshSessionUpdate(
-                refresh_token=token.refresh_token,
+                refresh_token=tokens.refresh_token,
             ),
         )
-        return token
+        return tokens

@@ -1,10 +1,9 @@
-import uuid
-from typing import Type, Union
+from typing import Union
 
 from src.auth.models import RefreshSessionModel
+from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.tokens import AccessTokenConfig, Tokens
 from src.auth.utils.tokens.access_token_decoder import AccessTokenDecoder
-from src.auth.utils.tokens.payload_handler import PayloadHandler
 from src.auth.utils.tokens.refresh_session_validator import (
     RefreshSessionValidator,
 )
@@ -36,7 +35,6 @@ class TokenToolkit:  # noqa: WPS214
     def __init__(
         self,
         token_config: AccessTokenConfig,
-        payload_handler: Type[PayloadHandler],
     ):
         """
         Инициализация класса TokenFacade.
@@ -56,7 +54,6 @@ class TokenToolkit:  # noqa: WPS214
             token_config.verification_key or token_config.secret_key,
             token_config.algorithm_name,
         )
-        self._payload_handler = payload_handler
 
     @property
     def secret_key(self) -> Union[dict, str]:
@@ -108,42 +105,41 @@ class TokenToolkit:  # noqa: WPS214
             raise ValueError('Ключ проверки должен быть строкой или словарём')
         self._access_token_decoder.verification_key = verification_key
 
-    def create_token(self, user_id: uuid.UUID) -> Tokens:
+    def create_token(self, payload: AccessTokenPayload) -> Tokens:
         """
         Создает токены доступа и обновления для указанного пользователя.
 
         Args:
-            user_id (uuid.UUID): ID пользователя, для которого создаются токены.
+            payload (AccessTokenPayload): Полезная нагрузка JWT.
 
         Returns:
             Tokens: Объект, содержащий токены доступа и обновления.
         """
-        payload: dict = self._payload_handler.create_payload(user_id)
+        payload: dict = payload.dict()
         return self._token_factory.create_token(**payload)
 
     def refresh(
         self,
         refresh_session: RefreshSessionModel,
-        user_id: uuid.UUID,
+        payload: AccessTokenPayload,
     ) -> Tokens:
         """
         Обновляет токены доступа и обновления.
 
         Args:
             refresh_session (RefreshSessionModel): Объект обновления сессии.
-            user_id (uuid.UUID): ID пользователя, для которого обновляются
-            токены.
+            payload (AccessTokenPayload): Полезная нагрузка JWT.
 
         Returns:
             Tokens: Объект, содержащий новые токены доступа и обновления.
         """
         self._refresh_session_validator.verify_refresh_session(
             refresh_session,
-            user_id,
+            payload.sub,
         )
-        return self.create_token(user_id)
+        return self.create_token(payload)
 
-    def decode_token(self, access_token: str) -> dict:
+    def decode_token(self, access_token: str) -> AccessTokenPayload:
         """
         Декодирует токен доступа и возвращает его полезную нагрузку.
 
@@ -158,4 +154,4 @@ class TokenToolkit:  # noqa: WPS214
             InvalidAccessTokenError: Если токен недействителен.
         """
         payload: dict = self._access_token_decoder.decode_token(access_token)
-        return self._payload_handler.decode_payload(payload)
+        return AccessTokenPayload.parse_obj(payload)

@@ -53,14 +53,14 @@ class AccessTokenConfig(BaseModel):
         для шифрования токена.
         algorithm_type (str): Тип алгоритма, используемого
         для шифрования токена.
-        verification_key (Optional[Union[dict, str]]): Ключ, используемый
-        для проверки токена. Может быть как словарём, так и строкой.
-        secret_key (str): Секретный ключ, используемый для шифрования
-        и расшифровки токена.
+        verification_key (Optional[dict]): Ключ, используемый
+        для проверки токена.
+        secret_key (Union[str, dict]): Секретный ключ, используемый
+        для шифрования и расшифровки токена.
     """
 
     access_token_expire_seconds: int
     algorithm_name: str
     algorithm_type: str
-    verification_key: Optional[Union[dict, str]]
-    secret_key: str
+    verification_key: Optional[dict]
+    secret_key: Union[str, dict]

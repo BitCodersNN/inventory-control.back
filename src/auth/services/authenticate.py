@@ -5,12 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.dao.user import UserDAO
 from src.auth.models import UserModel
+from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.refresh_session import RefreshSessionCreate
 from src.auth.schemas.tokens import Tokens
 from src.auth.schemas.user import UserAuth
+from src.auth.toolkit.password import PasswordToolkit
+from src.auth.toolkit.token import TokenToolkit
 from src.auth.utils.exceptions import InvalidCredentialsError
-from src.auth.utils.password_manager import PasswordManager
-from src.auth.utils.tokens.token_manager import TokenManager
 
 
 class AuthenticateService:
@@ -31,8 +32,8 @@ class AuthenticateService:
 
     def __init__(
         self,
-        token_manager: TokenManager,
-        password_manager: PasswordManager,
+        token_manager: TokenToolkit,
+        password_manager: PasswordToolkit,
         refresh_token_expire_seconds: int,
     ):
         """
@@ -78,16 +79,22 @@ class AuthenticateService:
         if user is None:
             raise InvalidCredentialsError
 
-        if not PasswordManager().compare(user_auth.password, user.pass_hash):
+        password_match: bool = self._password_manager.compare(
+            user_auth.password,
+            user.pass_hash,
+        )
+
+        if not password_match:
             raise InvalidCredentialsError
 
-        token: Tokens = self._token_manager.create_token(user.user_id)
+        payload = AccessTokenPayload(sub=user.user_id)
+        tokens: Tokens = self._token_manager.create_token(payload)
         await RefreshSessionDAO.add(
             session,
             RefreshSessionCreate(
-                refresh_token=token.refresh_token,
+                refresh_token=tokens.refresh_token,
                 expires_in=self._refresh_token_expire_seconds,
                 user_id=user.user_id,
             ),
         )
-        return token
+        return tokens

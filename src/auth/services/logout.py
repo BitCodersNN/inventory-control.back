@@ -1,6 +1,9 @@
+import uuid
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dao.refresh_session import RefreshSessionDAO
+from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.tokens import AccessToken, RefreshToken
 from src.auth.utils.exceptions import RefreshNotExistError, UnexpectedError
 from src.auth.utils.tokens.token_manager import TokenManager
@@ -80,9 +83,10 @@ class LogoutService:
             RefreshNotExistError: Если токен обновления не существует.
             UnexpectedError: Если произошла неожиданная ошибка.
         """
-        user_id: int = await self._token_manager.decode_token(
+        payload: AccessTokenPayload = await self._token_manager.decode_token(
             access_token.access_token,
-        )['sub']
+        )
+        user_id: uuid.UUID = payload.sub
         count: int = await RefreshSessionDAO.delete(
             session,
             user_id=user_id,
