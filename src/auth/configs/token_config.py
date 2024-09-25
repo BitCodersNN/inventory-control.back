@@ -1,9 +1,10 @@
 import base64
 import os
-from typing import Final, Optional
+from typing import Final, Optional, Union
 
 import yaml
 from dotenv import load_dotenv
+from jose import jwk
 
 from src.auth.schemas.tokens import AccessTokenConfig
 
@@ -14,18 +15,8 @@ YAML_FILE_PATH: Final = os.environ.get(
     default='src/auth/configs/jwt_key.yaml',
 )
 
-try:
-    with open(YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
-        _keys = yaml.safe_load(file)
-except FileNotFoundError:
-    _keys = {}
-
 _ACCESS_TOKEN_EXPIRE_MINUTES: Final = 5
 _REFRESH_TOKEN_EXPIRE_DAYS: Final = 30
-
-
-_PUBLIC_KEY_VALUE: Final = _keys.get('public_key')
-_SECRET_KEY_VALUE: Final = _keys.get('secret_key')
 
 MAX_TOKEN_COUNT: Final = os.environ.get(
     'MAX_TOKEN_COUNT',
@@ -55,19 +46,33 @@ REFRESH_TOKEN_EXPIRE_SECONDS: Final = int(
     ),
 ) * 24 * 60
 
-PUBLIC_KEY: Final[Optional[str]] = (
-    base64.b64encode(_PUBLIC_KEY_VALUE).decode('utf-8')
-    if _PUBLIC_KEY_VALUE is not None else None
+try:
+    with open(YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
+        _keys = yaml.safe_load(file)
+except FileNotFoundError:
+    _keys = {}
+
+SECRET_KEY: Final[Union[str, dict]] = (
+    base64.b64encode(
+        _keys.get('secret_key'),
+    ).decode('utf-8') if TOKEN_ALGORITHM_TYPE == 'symmetric'  # noqa: S105
+    else jwk.construct(
+        _keys.get('secret_key'),
+        TOKEN_ALGORITHM_NAME,
+    ).to_dict()
 )
-SECRET_KEY: Final[Optional[str]] = (
-    base64.b64encode(_SECRET_KEY_VALUE).decode('utf-8')
-    if _SECRET_KEY_VALUE is not None else None
+
+PUBLIC_KEY: Final[Optional[dict]] = (
+    jwk.construct(
+        _keys.get('public_key'),
+        TOKEN_ALGORITHM_NAME,
+    ).to_dict()
 )
 
 TOKEN_CONFIG: Final = AccessTokenConfig(
     access_token_expire_seconds=ACCESS_TOKEN_EXPIRE_SECONDS,
-    token_algorithm_name=TOKEN_ALGORITHM_NAME,
-    token_algorithm_type=TOKEN_ALGORITHM_TYPE,
+    algorithm_name=TOKEN_ALGORITHM_NAME,
+    algorithm_type=TOKEN_ALGORITHM_TYPE,
     verification_key=PUBLIC_KEY,
     secret_key=SECRET_KEY,
 )
