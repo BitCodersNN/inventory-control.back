@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.tokens import AccessToken, RefreshToken
+from src.auth.toolkit.token import TokenToolkit
 from src.auth.utils.exceptions import RefreshNotExistError, UnexpectedError
-from src.auth.utils.tokens.token_manager import TokenManager
 
 
 class LogoutService:
@@ -17,13 +17,13 @@ class LogoutService:
                         используя токен обновления или токен доступа.
 
     Attributes:
-        _token_manager (TokenManager): Менеджер токенов
+        _token_manager (TokenToolkit): Менеджер токенов
                             для декодирования токенов.
     """
 
     def __init__(
         self,
-        token_manager: TokenManager,
+        token_manager: TokenToolkit,
     ):
         """
         Инициализирует экземпляр LogoutService.
@@ -86,7 +86,7 @@ class LogoutService:
         payload: AccessTokenPayload = await self._token_manager.decode_token(
             access_token.access_token,
         )
-        user_id: uuid.UUID = payload.sub
+        user_id: uuid.UUID = uuid.UUID(payload.sub)
         count: int = await RefreshSessionDAO.delete(
             session,
             user_id=user_id,

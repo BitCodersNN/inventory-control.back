@@ -8,11 +8,11 @@ from src.auth.models import RefreshSessionModel, UserModel
 from src.auth.schemas.access_token_payload import AccessTokenPayload
 from src.auth.schemas.refresh_session import RefreshSessionUpdate
 from src.auth.schemas.tokens import RefreshToken, Tokens
+from src.auth.toolkit.token import TokenToolkit
 from src.auth.utils.exceptions import (
     InvalidCredentialsError,
     InvalidRefreshTokenError,
 )
-from src.auth.utils.tokens.token_manager import TokenManager
 
 
 class RefreshService:
@@ -28,13 +28,13 @@ class RefreshService:
 
     def __init__(
         self,
-        token_manager: TokenManager,
+        token_manager: TokenToolkit,
     ):
         """
         Инициализирует экземпляр RefreshService.
 
         Args:
-            token_manager (TokenManager): Менеджер токенов для
+            token_manager (TokenToolkit): Менеджер токенов для
                                 создания и управления токенами.
         """
         self._token_manager = token_manager
@@ -74,7 +74,7 @@ class RefreshService:
         if user is None:
             raise InvalidCredentialsError
 
-        payload = AccessTokenPayload(sub=user.user_id)
+        payload = AccessTokenPayload(sub=str(user.user_id))
         tokens: Tokens = self._token_manager.create_token(
             payload,
         )

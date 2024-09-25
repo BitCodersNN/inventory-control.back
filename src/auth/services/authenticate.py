@@ -22,7 +22,7 @@ class AuthenticateService:
     пользователей и создания токенов доступа и обновления.
 
     Attributes:
-        _token_manager (TokenManager): Менеджер токенов для
+        _token_manager (TokenToolkit): Менеджер токенов для
                                 создания и управления токенами.
         _password_manager (PasswordManager): Менеджер паролей для
                                                 проверки паролей.
@@ -40,9 +40,9 @@ class AuthenticateService:
         Инициализирует экземпляр AuthenticateService.
 
         Args:
-            token_manager (TokenManager): Менеджер токенов для
+            token_manager (TokenToolkit): Менеджер токенов для
                                 создания и управления токенами.
-            password_manager (PasswordManager): Менеджер паролей
+            password_manager (PasswordToolkit): Менеджер паролей
                                             для проверки паролей.
             refresh_token_expire_seconds (int): Время жизни
                                 токена обновления в секундах.
@@ -87,7 +87,7 @@ class AuthenticateService:
         if not password_match:
             raise InvalidCredentialsError
 
-        payload = AccessTokenPayload(sub=user.user_id)
+        payload = AccessTokenPayload(sub=str(user.user_id))
         tokens: Tokens = self._token_manager.create_token(payload)
         await RefreshSessionDAO.add(
             session,
