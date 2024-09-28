@@ -1,4 +1,3 @@
-import uuid
 from typing import Union
 
 from jose import jwt
@@ -105,5 +104,4 @@ class AccessTokenDecoder:
             )
             raise InvalidAccessTokenError
 
-        decoded_payload['sub'] = uuid.UUID(decoded_payload['sub'])
         return decoded_payload
