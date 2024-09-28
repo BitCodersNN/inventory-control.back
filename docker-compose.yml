@@ -78,9 +78,6 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      # JWT Configuration
-      SECRET_KEY: str
-      TOKEN_ALG: HS512
     ports:
       - "8000:8000"
 

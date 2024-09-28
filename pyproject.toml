@@ -20,6 +20,7 @@ loki-logger-handler = "^0.1.4"
 requests = "^2.32.3"
 python-jose = "^3.3.0"
 passlib = "^1.7.4"
+cryptography = "^43.0.1"
 
 [tool.poetry.group.dev.dependencies]
 wemake-python-styleguide = "^0.19.2"
@@ -32,6 +33,7 @@ freezegun = "^1.5.1"
 
 [tool.poetry.scripts]
 app = "src.__main__:main"
+jwt_key_generation = "src.auth.scripts.jwt_key_generation.__main__:_main"
 
 [build-system]
 requires = ["poetry-core"]
