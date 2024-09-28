@@ -50,15 +50,13 @@ try:
 except FileNotFoundError:
     _keys = {}
 
-SECRET_KEY: Final[Union[str, dict]] = (
-    base64.b64encode(
-        _keys.get('secret_key'),
-    ).decode('utf-8') if TOKEN_ALGORITHM_TYPE == 'symmetric'  # noqa: S105
-    else jwk.construct(
-        _keys.get('secret_key'),
-        TOKEN_ALGORITHM_NAME,
-    ).to_dict()
-)
+
+_SECRET_KEY: Final = _keys.get('secret_key')
+
+if TOKEN_ALGORITHM_TYPE == 'symmetric':
+    SECRET_KEY: Final[str] = base64.b64encode(_SECRET_KEY).decode('utf-8')
+else:
+    SECRET_KEY: Final[dict] = jwk.construct(_SECRET_KEY, TOKEN_ALGORITHM_NAME).to_dict()
 
 PUBLIC_KEY: Final[Optional[dict]] = (
     jwk.construct(
