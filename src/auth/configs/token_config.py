@@ -1,12 +1,10 @@
 import base64
 import os
-from typing import Final, Optional, Union
+from typing import Final, Optional
 
 import yaml
 from dotenv import load_dotenv
 from jose import jwk
-
-from src.auth.schemas.tokens import AccessTokenConfig
 
 load_dotenv()
 
@@ -52,27 +50,20 @@ try:
 except FileNotFoundError:
     _keys = {}
 
-SECRET_KEY: Final[Union[str, dict]] = (
-    base64.b64encode(
-        _keys.get('secret_key'),
-    ).decode('utf-8') if TOKEN_ALGORITHM_TYPE == 'symmetric'  # noqa: S105
-    else jwk.construct(
-        _keys.get('secret_key'),
+
+_SECRET_KEY: Final = _keys.get('secret_key')
+
+if TOKEN_ALGORITHM_TYPE == 'symmetric':  # noqa: S105
+    SECRET_KEY: Final[str] = base64.b64encode(_SECRET_KEY).decode('utf-8')
+else:
+    SECRET_KEY: Final[dict] = jwk.construct(
+        _SECRET_KEY,
         TOKEN_ALGORITHM_NAME,
     ).to_dict()
-)
 
 PUBLIC_KEY: Final[Optional[dict]] = (
     jwk.construct(
         _keys.get('public_key'),
         TOKEN_ALGORITHM_NAME,
     ).to_dict()
-)
-
-TOKEN_CONFIG: Final = AccessTokenConfig(
-    access_token_expire_seconds=ACCESS_TOKEN_EXPIRE_SECONDS,
-    algorithm_name=TOKEN_ALGORITHM_NAME,
-    algorithm_type=TOKEN_ALGORITHM_TYPE,
-    verification_key=PUBLIC_KEY,
-    secret_key=SECRET_KEY,
 )
