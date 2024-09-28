@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Final, Optional, Union
+from typing import Final, Optional
 
 import yaml
 from dotenv import load_dotenv
@@ -53,10 +53,13 @@ except FileNotFoundError:
 
 _SECRET_KEY: Final = _keys.get('secret_key')
 
-if TOKEN_ALGORITHM_TYPE == 'symmetric':
+if TOKEN_ALGORITHM_TYPE == 'symmetric':  # noqa: S105
     SECRET_KEY: Final[str] = base64.b64encode(_SECRET_KEY).decode('utf-8')
 else:
-    SECRET_KEY: Final[dict] = jwk.construct(_SECRET_KEY, TOKEN_ALGORITHM_NAME).to_dict()
+    SECRET_KEY: Final[dict] = jwk.construct(
+        _SECRET_KEY,
+        TOKEN_ALGORITHM_NAME,
+    ).to_dict()
 
 PUBLIC_KEY: Final[Optional[dict]] = (
     jwk.construct(
