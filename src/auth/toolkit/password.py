@@ -3,7 +3,7 @@ from typing import Optional
 from passlib.context import CryptContext
 
 
-class PasswordManager:
+class PasswordToolkit:
     """
     Управление паролями и их хешированием.
 

@@ -103,3 +103,66 @@ class TokenExpiredError(HTTPException):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Срок действия токена истек',
         )
+
+
+class InvalidCredentialsError(HTTPException):
+    """
+    Исключение, возникающее при предоставлении неверных учетных данных.
+
+    Attributes:
+        status_code (int): HTTP-статус код ошибки (400).
+        detail (str): Детальное описание ошибки.
+    """
+
+    def __init__(self):
+        """
+        Инициализирует экземпляр исключения InvalidCredentialsError.
+
+        Устанавливает HTTP-статус код 400 и детали ошибки.
+        """
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Неправильный логин или пароль',
+        )
+
+
+class RefreshNotExistError(HTTPException):
+    """
+    Исключение, рефрешь токен не существует.
+
+    Attributes:
+        status_code (int): HTTP-статус код ошибки (404).
+        detail (str): Детальное описание ошибки.
+    """
+
+    def __init__(self):
+        """
+        Инициализирует экземпляр исключения RefreshNotExistError.
+
+        Устанавливает HTTP-статус код 404 и детали ошибки.
+        """
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail='Рефрешь токен не найден',
+        )
+
+
+class UnexpectedError(HTTPException):
+    """
+    Исключение, возникающее при возникновении неожиданной ошибки на сервере.
+
+    Attributes:
+        status_code (int): HTTP-статус код ошибки (500).
+        detail (str): Детальное описание ошибки.
+    """
+
+    def __init__(self):
+        """
+        Инициализирует экземпляр исключения UnexpectedError.
+
+        Устанавливает HTTP-статус код 500 и детали ошибки.
+        """
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='хз че там',
+        )

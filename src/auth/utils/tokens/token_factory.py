@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Union
+from typing import Any, Union
 
 from jose import jwt
 
-from src.auth.schemas.token import Token
+from src.auth.schemas.tokens import Tokens
 
 
 class TokenFactory:
@@ -65,47 +65,47 @@ class TokenFactory:
 
     def create_token(
         self,
-        user_id: uuid.UUID,
-    ) -> Token:
+        **kwargs: Any,
+    ) -> Tokens:
         """
         Создает и возвращает токены доступа и обновления для пользователя.
 
         Args:
-            user_id (int): ID пользователя, для которого создается
-            токен подтверждения доступа.
+            kwargs ([str, Any]): Произвольные параметры, которые будут
+            включены в токен
 
         Returns:
-            Token: Объект Token, содержащий токены доступа и обновления.
+            Tokens: Объект Token, содержащий токены доступа и обновления.
         """
         access_token = self._create_access_token(
-            user_id=user_id,
+            **kwargs,
         )
         refresh_token = self._create_refresh_token()
 
-        return Token(
+        return Tokens(
             access_token=access_token,
             refresh_token=refresh_token,
         )
 
     def _create_access_token(
         self,
-        user_id: uuid.UUID,
+        **kwargs: Any,
     ) -> str:
         """
-        Создает токен доступа для указанного пользователя.
+        Создает JWT для доступа на основе переданных параметров.
 
         Args:
-            user_id (int): ID пользователя, для которого создается
-            токен подтверждения доступа.
+            kwargs ([str, Any]): Произвольные параметры, которые будут
+            включены в токен.
 
         Returns:
-            str: Сгенерированный токен доступа.
+            str: Сгенерированный JWT.
         """
         created_at: datetime = datetime.now(timezone.utc)
         exp = timedelta(seconds=self._access_token_expire_seconds)
         exp += created_at
         token_data: dict = {
-            'sub': str(user_id),
+            **kwargs,
             'iat': created_at,
             'exp': exp,
         }
