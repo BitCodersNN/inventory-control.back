@@ -1,8 +1,10 @@
+from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.auth.dao.refresh_session import RefreshSessionDAO
 from src.auth.schemas.tokens import AccessToken, RefreshToken
-from src.auth.utils.exceptions import RefreshNotExistError, UnexpectedError
+from src.auth.utils.exceptions import UnexpectedError
 from src.auth.utils.tokens.token_manager import TokenManager
 
 
@@ -43,9 +45,6 @@ class LogoutService:
             session (AsyncSession): Асинхронная сессия базы данных.
             refresh_token (RefreshToken): Рефрешь токен.
 
-        Returns:
-            int: Количество удаленных сессий.
-
         Raises:
             RefreshNotExistError: Если токен обновления не существует.
             UnexpectedError: Если произошла неожиданная ошибка.
@@ -54,12 +53,9 @@ class LogoutService:
             session,
             refresh_token=refresh_token,
         )
-        if count == 0:
-            raise RefreshNotExistError
-        elif count is None:
-            raise UnexpectedError
 
-        return count
+        if count is None:
+            raise UnexpectedError
 
     async def logout_from_all_devices(
         self,
@@ -73,23 +69,17 @@ class LogoutService:
             session (AsyncSession): Асинхронная сессия базы данных.
             access_token (AccessToken): Акцессс токен.
 
-        Returns:
-            int: Количество удаленных сессий.
-
         Raises:
             RefreshNotExistError: Если токен обновления не существует.
             UnexpectedError: Если произошла неожиданная ошибка.
         """
-        user_id: int = await self._token_manager.decode_token(
+        user_id: Optional[int] = await self._token_manager.decode_token(
             access_token.access_token,
         )['sub']
         count: int = await RefreshSessionDAO.delete(
             session,
             user_id=user_id,
         )
-        if count == 0:
-            raise RefreshNotExistError
-        elif count is None:
-            raise UnexpectedError
 
-        return count
+        if count is None:
+            raise UnexpectedError

@@ -18,10 +18,10 @@ from src.auth.services import (
 )
 from src.auth.utils.password_manager import PasswordManager
 from src.auth.utils.tokens.token_manager import TokenManager
-from src.utils.database_session import get_async_session
+from src.utils.database_session import session_connect
 
 
-class ServiceAggregator:
+class AuthService:
     """
     Сервис аутентификации и управления токенами.
 
@@ -82,7 +82,7 @@ class ServiceAggregator:
             Optional[Tokens]: Токены доступа и обновления,
                 если аутентификация прошла успешно, иначе None.
         """
-        return await self._session_connect(
+        return await session_connect(
             self._authenticate_service.authenticate,
             user_auth,
         )
@@ -102,7 +102,7 @@ class ServiceAggregator:
             Optional[Tokens]: Токены доступа и обновления,
                     если выход прошел успешно, иначе None.
         """
-        return await self._session_connect(
+        return await session_connect(
             self._logout_service.logout,
             refresh_token,
         )
@@ -122,7 +122,7 @@ class ServiceAggregator:
             Optional[Tokens]: Токены доступа и обновления,
                     если выход прошел успешно, иначе None.
         """
-        return await self._session_connect(
+        return await session_connect(
             self._logout_service.logout_from_all_devices,
             access_token,
         )
@@ -142,7 +142,7 @@ class ServiceAggregator:
             Optional[Tokens]: Новые токены доступа и обновления,
                     если обновление прошло успешно, иначе None.
         """
-        return await self._session_connect(
+        return await session_connect(
             self._refresh_service.refresh,
             refresh_token,
         )
@@ -177,21 +177,3 @@ class ServiceAggregator:
 
             return func(*args, **kwargs)
         return ind_decorate
-
-    @classmethod
-    async def _session_connect(cls, func: Callable, *args, **kwargs):
-        """
-         Выполняет функцию в а синхронной сессией базы данных.
-
-        Args:
-            func (Callable): Функция, выполняемая в контексте сессии.
-            args: Аргументы для переданной функции.
-            kwargs: Ключевые аргументы для переданной функции.
-
-        Returns:
-            Any: Результат выполнения переданной функции.
-        """
-        async with get_async_session() as session:
-            func_result = await func(session, *args, **kwargs)
-            await session.commit()
-        return func_result
