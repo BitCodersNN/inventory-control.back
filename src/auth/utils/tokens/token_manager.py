@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Union
 
 from src.auth.models import RefreshSessionModel
 from src.auth.schemas.tokens import Tokens
@@ -36,8 +36,8 @@ class TokenManager:  # noqa: WPS214
         self,
         access_token_expire_seconds: int,
         algorithm_name: str,
-        secret_key: str,
-        verification_key: Optional[str] = None,
+        secret_key: Union[dict, str],
+        verification_key: Optional[Union[dict, str]],
     ):
         """
         Инициализация класса TokenFacade.
@@ -45,9 +45,10 @@ class TokenManager:  # noqa: WPS214
         Args:
             access_token_expire_seconds (int): Время жизни токена доступа в сек.
             algorithm_name (str): Название алгоритма, подписывающего токены.
-            secret_key (str): Секретный ключ, используемый для подписи токенов.
-            verification_key (Optional[str]): Ключ для проверки подписи токенов.
-            Если не указан, используется secret_key.
+            secret_key (Union[dict, str]): Секретный ключ, используемый
+            для подписи токенов.
+            verification_key (Optional[bytes]): Ключ для проверки подписи
+            токенов. Если не указан, используется secret_key.
         """
         verification_key = verification_key if (
             verification_key is not None
@@ -65,53 +66,53 @@ class TokenManager:  # noqa: WPS214
         )
 
     @property
-    def secret_key(self) -> str:
+    def secret_key(self) -> Union[dict, str]:
         """
         Возвращает текущий секретный ключ.
 
         Returns:
-            str: Текущий секретный ключ.
+            Union[dict, str]: Текущий секретный ключ.
         """
         return self._token_factory.secret_key
 
     @secret_key.setter
-    def secret_key(self, secret_key: str):
+    def secret_key(self, secret_key: Union[dict, str]):
         """
         Устанавливает новый секретный ключ.
 
         Args:
-            secret_key (str): Новый секретный ключ. Должен быть строкой.
+            secret_key (Union[dict, str]): Новый секретный ключ.
 
         Raises:
-            ValueError: Если переданный ключ не является строкой.
+            ValueError: Если переданный ключ не является строкой или словарём.
         """
-        if not isinstance(secret_key, str):
-            raise ValueError('Секретный ключ должен быть строкой')
+        if not isinstance(secret_key, (str, dict)):
+            raise ValueError('Секретный ключ должен быть строкой или словарём')
         self._token_factory.secret_key = secret_key
 
     @property
-    def verification_key(self) -> str:
+    def verification_key(self) -> Union[dict, str]:
         """
         Возвращает текущий ключ проверки.
 
         Returns:
-            str: Текущий ключ проверки.
+            Union[dict, str]: Текущий ключ проверки.
         """
         return self._access_token_decoder.verification_key
 
     @verification_key.setter
-    def verification_key(self, verification_key: str):
+    def verification_key(self, verification_key: Union[dict, str]):
         """
         Устанавливает новый ключ проверки.
 
         Args:
-            verification_key (str): Новый ключ проверки. Должен быть строкой.
+            verification_key (Union[dict, str]): Новый ключ проверки.
 
         Raises:
-            ValueError: Если переданный ключ не является строкой.
+            ValueError: Если переданный ключ не является строкой или словарём.
         """
-        if not isinstance(verification_key, str):
-            raise ValueError('Ключ проверки должен быть строкой')
+        if not isinstance(verification_key, (str, dict)):
+            raise ValueError('Ключ проверки должен быть строкой или словарём')
         self._access_token_decoder.verification_key = verification_key
 
     def create_token(self, user_id: uuid.UUID) -> Tokens:
