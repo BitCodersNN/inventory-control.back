@@ -23,7 +23,7 @@ ASYNC_SESSION_MAKER: Final = async_sessionmaker(
 )
 
 
-async def session_connect(func: Callable, *args, **kwargs):
+async def session_connect(func: Callable, *args, **kwargs) -> Callable:
     """
      Выполняет функцию в а синхронной сессией базы данных.
 
