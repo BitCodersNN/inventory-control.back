@@ -49,7 +49,7 @@ class LogoutService:
             RefreshNotExistError: Если токен обновления не существует.
             UnexpectedError: Если произошла неожиданная ошибка.
         """
-        count: int = await RefreshSessionDAO.delete(
+        count: Optional[int] = await RefreshSessionDAO.delete(
             session,
             refresh_token=refresh_token,
         )
@@ -76,7 +76,7 @@ class LogoutService:
         user_id: Optional[int] = await self._token_manager.decode_token(
             access_token.access_token,
         )['sub']
-        count: int = await RefreshSessionDAO.delete(
+        count: Optional[int] = await RefreshSessionDAO.delete(
             session,
             user_id=user_id,
         )
