@@ -1,8 +1,10 @@
+import base64
 import os
 from typing import Final, Optional
 
 import yaml
 from dotenv import load_dotenv
+from jose import jwk
 
 load_dotenv()
 
@@ -11,18 +13,8 @@ YAML_FILE_PATH: Final = os.environ.get(
     default='src/auth/configs/jwt_key.yaml',
 )
 
-try:
-    with open(YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
-        _keys = yaml.safe_load(file)
-except FileNotFoundError:
-    _keys = {}
-
 _ACCESS_TOKEN_EXPIRE_MINUTES: Final = 5
 _REFRESH_TOKEN_EXPIRE_DAYS: Final = 30
-
-
-PUBLIC_KEY: Final[Optional[bytes]] = _keys.get('public_key')
-SECRET_KEY: Final[Optional[bytes]] = _keys.get('secret_key')
 
 MAX_TOKEN_COUNT: Final = os.environ.get(
     'MAX_TOKEN_COUNT',
@@ -51,3 +43,27 @@ REFRESH_TOKEN_EXPIRE_SECONDS: Final = int(
         default=_REFRESH_TOKEN_EXPIRE_DAYS,
     ),
 ) * 24 * 60
+
+try:
+    with open(YAML_FILE_PATH, 'r') as file:  # noqa: WPS110
+        _keys = yaml.safe_load(file)
+except FileNotFoundError:
+    _keys = {}
+
+
+_SECRET_KEY: Final = _keys.get('secret_key')
+
+if TOKEN_ALGORITHM_TYPE == 'symmetric':  # noqa: S105
+    SECRET_KEY: Final[str] = base64.b64encode(_SECRET_KEY).decode('utf-8')
+else:
+    SECRET_KEY: Final[dict] = jwk.construct(
+        _SECRET_KEY,
+        TOKEN_ALGORITHM_NAME,
+    ).to_dict()
+
+PUBLIC_KEY: Final[Optional[dict]] = (
+    jwk.construct(
+        _keys.get('public_key'),
+        TOKEN_ALGORITHM_NAME,
+    ).to_dict()
+)

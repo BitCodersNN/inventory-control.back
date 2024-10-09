@@ -1,4 +1,4 @@
-from uuid import UUID
+from typing import Union
 
 from jose import jwt
 
@@ -14,10 +14,6 @@ class AccessTokenDecoder:
     """
     Класс для декодирования JWT-токенов доступа.
 
-    Attributes:
-        _verification_key (str): Ключ для проверки подлинности токена.
-        _algorithm_name (str): Название алгоритма, подписывающего токены.
-
     Methods:
         verification_key (property): Возвращает текущий ключ проверки.
         verification_key (setter): Устанавливает новый ключ проверки.
@@ -27,42 +23,43 @@ class AccessTokenDecoder:
 
     def __init__(
         self,
-        verification_key: str,
+        verification_key: Union[dict, str],
         algorithm_name: str,
     ):
         """
         Инициализация объекта AccessTokenDecoder.
 
         Args:
-            verification_key (str): Ключ для проверки подлинности токена.
+            verification_key (Union[dict, str]): Ключ для проверки
+            подлинности токена.
             algorithm_name (str): Название алгоритма, подписывающего токены.
         """
         self._verification_key = verification_key
         self._algorithm_name = algorithm_name
 
     @property
-    def verification_key(self) -> str:
+    def verification_key(self) -> Union[dict, str]:
         """
         Возвращает текущий ключ проверки.
 
         Returns:
-            str: Текущий ключ проверки.
+            Union[dict, str]: Текущий ключ проверки.
         """
         return self._verification_key
 
     @verification_key.setter
-    def verification_key(self, verification_key: str):
+    def verification_key(self, verification_key: Union[dict, str]):
         """
         Устанавливает новый ключ проверки.
 
         Args:
-            verification_key (str): Новый ключ проверки. Должен быть строкой.
+            verification_key (Union[dict, str]): Новый ключ проверки.
 
         Raises:
-            ValueError: Если переданный ключ не является строкой.
+            ValueError: Если переданный ключ не является строкой или словарём.
         """
-        if not isinstance(verification_key, str):
-            raise ValueError('Ключ проверки должен быть строкой')
+        if not isinstance(verification_key, Union[dict, str]):
+            raise ValueError('Ключ проверки должен словарем')
         self._verification_key = verification_key
 
     def decode_token(

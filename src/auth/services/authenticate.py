@@ -78,7 +78,12 @@ class AuthenticateService:
         if user is None:
             raise InvalidCredentialsError
 
-        if not PasswordManager().compare(user_auth.password, user.pass_hash):
+        conditions: bool = self._password_manager.compare(
+            user_auth.password,
+            user.pass_hash,
+        )
+
+        if not conditions:
             raise InvalidCredentialsError
 
         token: Tokens = self._token_manager.create_token(user.user_id)
