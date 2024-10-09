@@ -22,6 +22,19 @@ class _UserBase(BaseModel):
     role: UserRoles = Field(UserRoles.reader)
 
 
+class UserAuth(BaseModel):
+    """
+    Модель для авторизации.
+
+    Attributes:
+        login (str): Логин пользователя.
+        password (str): Пароль пользователя.
+    """
+
+    login: str = Field(max_length=MAX_LOGIN_SIZE)
+    password: str
+
+
 class UserCreate(_UserBase):
     """
     Модель для создания нового пользователя.

@@ -1,5 +1,5 @@
 import contextlib
-from typing import AsyncGenerator, Final
+from typing import AsyncGenerator, Callable, Final
 
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -21,6 +21,24 @@ ASYNC_SESSION_MAKER: Final = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False,
 )
+
+
+async def session_connect(func: Callable, *args, **kwargs) -> Callable:
+    """
+     Выполняет функцию в а синхронной сессией базы данных.
+
+    Args:
+        func (Callable): Функция, выполняемая в контексте сессии.
+        args: Аргументы для переданной функции.
+        kwargs: Ключевые аргументы для переданной функции.
+
+    Returns:
+        Any: Результат выполнения переданной функции.
+    """
+    async with get_async_session() as session:
+        func_result = await func(session, *args, **kwargs)
+        await session.commit()
+    return func_result
 
 
 @contextlib.asynccontextmanager
