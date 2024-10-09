@@ -187,8 +187,7 @@ class BaseDAO(   # noqa: WPS214
             returning(cls.model)
         )
         try:
-            # query_result = await execute_query(session, query)
-            query_result = await session.execute(query)
+            query_result = await execute_query(session, query)
         except Exception as ex:
             return cls._log_error('add', ex, data=create_data)
         return query_result.scalars().first()
