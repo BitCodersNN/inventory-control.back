@@ -58,7 +58,7 @@ class TestTokenManager:
             ),
         ],
     )
-    def test___init__(
+    def test_init(
         self,
         verification_key: str,
     ):
@@ -149,7 +149,7 @@ class TestTokenManager:
         dec_tokens: dict = token_manager.decode_token(
             tokens.access_token,
         )
-        assert dec_tokens['sub'] == user_id
+        assert dec_tokens['sub'] == str(user_id)  # исправить в pr 52
 
     @pytest.mark.parametrize(
         [
